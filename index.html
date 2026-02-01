@@ -1,0 +1,2124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SNT Data Assembly</title>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+Pro:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #004080;
+      --primary-dark: #003060;
+      --primary-light: #0060a0;
+      --accent: #ffc107;
+      --accent-dark: #e0a800;
+      --success: #28a745;
+      --danger: #dc3545;
+      --warning: #fd7e14;
+      --info: #17a2b8;
+      --purple: #6f42c1;
+      --gray-100: #f0f4f8;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-400: #94a3b8;
+      --gray-600: #475569;
+      --gray-800: #1e293b;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Source Sans Pro', Arial, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); min-height: 100vh; }
+    
+    /* Login */
+    .login-screen { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .login-screen.hidden { display: none; }
+    .login-container { background: white; border-radius: 12px; padding: 35px; width: 100%; max-width: 420px; box-shadow: 0 25px 80px rgba(0,0,0,0.5); }
+    .login-logo { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 25px; }
+    .login-logo img { width: 65px; height: 65px; border-radius: 6px; object-fit: contain; border: 2px solid var(--gray-200); }
+    .login-logo-text h1 { font-family: 'Oswald', sans-serif; font-size: 1.3rem; color: var(--primary); }
+    .login-logo-text p { font-size: 0.8rem; color: var(--gray-600); }
+    .login-title { text-align: center; font-family: 'Oswald', sans-serif; font-size: 1.4rem; color: var(--gray-800); margin-bottom: 20px; }
+    .login-form .form-group { margin-bottom: 18px; }
+    .login-form label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--gray-800); font-size: 0.9rem; }
+    .login-form input { width: 100%; padding: 12px 14px; border: 2px solid var(--gray-200); border-radius: 6px; font-size: 1rem; font-family: inherit; }
+    .login-form input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,64,128,0.1); }
+    .login-btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; font-family: 'Oswald', sans-serif; text-transform: uppercase; cursor: pointer; transition: background 0.3s; }
+    .login-btn:hover { background: var(--primary-dark); }
+    .login-error { background: #fee2e2; color: #dc2626; padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center; font-weight: 600; display: none; font-size: 0.9rem; }
+    .login-error.show { display: block; }
+    .login-hint { margin-top: 18px; padding: 12px; background: var(--gray-100); border-radius: 6px; font-size: 0.8rem; color: var(--gray-600); }
+    .login-hint strong { color: var(--gray-800); }
+    .login-hint .role-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin-left: 5px; }
+    .login-hint .role-tag.admin { background: #fef3c7; color: #92400e; }
+    .login-hint .role-tag.supervisor { background: #e0e7ff; color: #3730a3; }
+    .login-hint .role-tag.user { background: #d1fae5; color: #065f46; }
+    
+    /* App Container */
+    .app-container { display: none; }
+    .app-container.active { display: block; }
+    
+    /* Header */
+    .header { background: var(--primary); padding: 10px 25px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 20px rgba(0,0,0,0.3); position: sticky; top: 0; z-index: 100; flex-wrap: wrap; gap: 12px; }
+    .header-brand { display: flex; align-items: center; gap: 10px; color: white; }
+    .logo-box { background: white; border-radius: 4px; padding: 3px; }
+    .logo-box img { width: 45px; height: 45px; border-radius: 2px; object-fit: contain; }
+    .header-text h1 { font-family: 'Oswald', sans-serif; font-size: 1.2rem; font-weight: 700; }
+    .header-text p { font-size: 0.7rem; opacity: 0.9; }
+    .search-container { display: flex; flex: 1; max-width: 300px; min-width: 180px; }
+    .search-box { flex: 1; position: relative; }
+    .search-input { width: 100%; padding: 8px 38px 8px 14px; border: 2px solid rgba(255,255,255,0.3); border-radius: 6px; background: rgba(255,255,255,0.1); color: white; font-family: inherit; font-size: 0.9rem; outline: none; }
+    .search-input::placeholder { color: rgba(255,255,255,0.6); }
+    .search-input:focus { background: rgba(255,255,255,0.2); border-color: var(--accent); }
+    .search-btn { position: absolute; right: 3px; top: 50%; transform: translateY(-50%); background: var(--accent); border: none; border-radius: 4px; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .search-btn svg { width: 14px; height: 14px; stroke: #000; }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+    .user-badge { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 6px; color: white; font-weight: 600; font-size: 0.85rem; }
+    .user-badge.admin { background: rgba(255,193,7,0.3); }
+    .user-badge.supervisor { background: rgba(111,66,193,0.4); }
+    .user-badge svg { width: 16px; height: 16px; }
+    .role-label { font-size: 0.7rem; opacity: 0.8; text-transform: uppercase; }
+    
+    /* Buttons */
+    .btn { padding: 8px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: 'Oswald', sans-serif; text-transform: uppercase; display: flex; align-items: center; gap: 5px; border: 2px solid transparent; transition: all 0.3s; }
+    .btn-outline { background: transparent; border: 2px solid rgba(255,255,255,0.5); color: white; }
+    .btn-outline:hover { background: rgba(255,255,255,0.15); border-color: white; }
+    .btn-gold { background: var(--accent); border-color: var(--accent); color: #000; }
+    .btn-gold:hover { background: var(--accent-dark); }
+    .btn-danger { background: var(--danger); border-color: var(--danger); color: white; }
+    .btn-danger:hover { background: #c82333; }
+    .btn-success { background: var(--success); border-color: var(--success); color: white; }
+    .btn-success:hover { background: #218838; }
+    .btn-info { background: var(--info); border-color: var(--info); color: white; }
+    .btn-info:hover { background: #138496; }
+    .btn-purple { background: var(--purple); border-color: var(--purple); color: white; }
+    .btn-purple:hover { background: #5a32a3; }
+    .btn-primary { background: var(--primary); border-color: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-light); }
+    
+    /* Main */
+    .main { padding: 18px 25px; min-height: calc(100vh - 80px); }
+    
+    /* Section Nav */
+    .section-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; background: rgba(0,64,128,0.3); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(0,64,128,0.5); }
+    .section-nav-btn { width: 32px; height: 32px; border-radius: 6px; background: var(--primary); border: 2px solid var(--accent); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .section-nav-btn:hover:not(:disabled) { background: var(--primary-light); }
+    .section-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .section-nav-btn svg { width: 14px; height: 14px; }
+    .section-tabs { display: flex; gap: 5px; flex: 1; overflow-x: auto; padding: 4px 0; scrollbar-width: none; }
+    .section-tabs::-webkit-scrollbar { display: none; }
+    .section-tab { padding: 6px 12px; background: rgba(255,255,255,0.1); border: 2px solid transparent; border-radius: 6px; color: white; font-family: 'Oswald', sans-serif; font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 5px; transition: all 0.3s; }
+    .section-tab:hover { background: rgba(255,255,255,0.2); }
+    .section-tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+    .section-tab svg { width: 12px; height: 12px; }
+    .section-tab.active svg { stroke: #000; }
+    .tab-count { background: rgba(0,0,0,0.2); padding: 1px 5px; border-radius: 4px; font-size: 0.65rem; }
+    .section-tab.active .tab-count { background: rgba(0,0,0,0.15); }
+    
+    /* Section Header */
+    .section-header { background: var(--primary); color: white; padding: 12px 18px; border-radius: 8px; display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+    .section-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .section-icon svg { width: 20px; height: 20px; stroke: white; }
+    .section-title { font-family: 'Oswald', sans-serif; font-size: 1.1rem; font-weight: 700; text-transform: uppercase; }
+    .section-subtitle { font-size: 0.8rem; opacity: 0.9; }
+    
+    /* Cards Grid */
+    .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+    
+    /* Item Card */
+    .item-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2); transition: transform 0.3s, box-shadow 0.3s; }
+    .item-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.25); }
+    .item-card.completed { opacity: 0.85; }
+    .item-card.completed .item-card-header { background: #d1fae5; }
+    .item-card.overdue .item-card-header { background: #fee2e2; }
+    .item-card-header { padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px; background: var(--gray-100); }
+    .item-type-icon { width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; }
+    .item-type-icon svg { width: 22px; height: 22px; }
+    .item-type-icon.pdf { background: linear-gradient(135deg, #e53935, #c62828); }
+    .item-type-icon.excel { background: linear-gradient(135deg, #43a047, #2e7d32); }
+    .item-type-icon.word { background: linear-gradient(135deg, #1e88e5, #1565c0); }
+    .item-type-icon.ppt { background: linear-gradient(135deg, #fb8c00, #ef6c00); }
+    .item-type-icon.email { background: linear-gradient(135deg, #5c6bc0, #3949ab); }
+    .item-type-icon.meeting { background: linear-gradient(135deg, #26a69a, #00897b); }
+    .item-type-icon.nextstep { background: linear-gradient(135deg, #ab47bc, #8e24aa); }
+    .item-type-icon.other { background: linear-gradient(135deg, #78909c, #546e7a); }
+    .item-info { flex: 1; min-width: 0; }
+    .item-name { font-weight: 700; font-size: 0.95rem; color: var(--gray-800); margin-bottom: 4px; line-height: 1.3; }
+    .item-card.completed .item-name { text-decoration: line-through; color: var(--gray-600); }
+    .item-meta { font-size: 0.75rem; color: var(--gray-600); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .item-date { display: inline-flex; align-items: center; gap: 3px; background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-weight: 600; font-size: 0.7rem; }
+    .item-date svg { width: 10px; height: 10px; }
+    .item-card.overdue .item-date { background: var(--danger); }
+    
+    /* Status Badge */
+    .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }
+    .status-badge.pending { background: #fff3cd; color: #856404; }
+    .status-badge.in-progress { background: #cce5ff; color: #004085; }
+    .status-badge.completed { background: #d4edda; color: #155724; }
+    .status-badge.overdue { background: #f8d7da; color: #721c24; }
+    
+    /* Card Body */
+    .item-card-body { padding: 14px 16px; }
+    .item-description { font-size: 0.85rem; color: var(--gray-600); line-height: 1.5; margin-bottom: 10px; max-height: 50px; overflow: hidden; }
+    .item-assignee { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--gray-100); border-radius: 6px; margin-bottom: 10px; font-size: 0.8rem; }
+    .item-assignee svg { width: 14px; height: 14px; stroke: var(--gray-600); }
+    .item-assignee .assignee-name { font-weight: 600; color: var(--gray-800); }
+    .item-assignee .assignee-email { color: var(--primary); font-size: 0.75rem; }
+    
+    /* Comments indicator */
+    .comments-indicator { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; color: var(--gray-600); margin-bottom: 10px; cursor: pointer; padding: 5px 8px; background: #e0e7ff; border-radius: 6px; transition: background 0.2s; }
+    .comments-indicator:hover { background: #c7d2fe; }
+    .comments-indicator svg { width: 14px; height: 14px; }
+    .comments-indicator .count { font-weight: 700; color: var(--purple); }
+    
+    /* Card Actions */
+    .item-card-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .item-btn { flex: 1; min-width: 60px; padding: 7px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 4px; font-family: inherit; transition: all 0.3s; }
+    .item-btn svg { width: 13px; height: 13px; }
+    .item-btn-view { background: var(--primary); color: white; }
+    .item-btn-view:hover { background: var(--primary-light); }
+    .item-btn-download { background: var(--success); color: white; }
+    .item-btn-download:hover { background: #218838; }
+    .item-btn-complete { background: var(--success); color: white; }
+    .item-btn-complete:hover { background: #218838; }
+    .item-btn-comment { background: var(--purple); color: white; }
+    .item-btn-comment:hover { background: #5a32a3; }
+    .item-btn-edit { background: var(--info); color: white; flex: 0; min-width: auto; padding: 7px 9px; }
+    .item-btn-edit:hover { background: #138496; }
+    .item-btn-delete { background: var(--danger); color: white; flex: 0; min-width: auto; padding: 7px 9px; }
+    .item-btn-delete:hover { background: #c82333; }
+    
+    /* Empty State */
+    .empty-state { text-align: center; padding: 50px 25px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 2px dashed rgba(255,255,255,0.2); }
+    
+    /* File Upload Zone */
+    .file-upload-zone { border: 2px dashed var(--gray-300); border-radius: 8px; padding: 25px 20px; text-align: center; cursor: pointer; transition: all 0.3s; background: var(--gray-100); }
+    .file-upload-zone:hover { border-color: var(--primary); background: #e7f3ff; }
+    .file-upload-zone.dragover { border-color: var(--primary); background: #e7f3ff; }
+    .file-upload-zone.has-file { border-color: var(--success); background: #e8f5e9; }
+    
+    /* Rich Text Editor */
+    .rich-editor-toolbar { display: flex; gap: 4px; padding: 8px; background: var(--gray-100); border: 2px solid var(--gray-200); border-bottom: none; border-radius: 6px 6px 0 0; flex-wrap: wrap; }
+    .rich-editor-toolbar button { padding: 6px 10px; background: white; border: 1px solid var(--gray-300); border-radius: 4px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; min-width: 32px; transition: all 0.2s; }
+    .rich-editor-toolbar button:hover { background: var(--primary); color: white; border-color: var(--primary); }
+    .rich-editor-toolbar button.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .rich-editor-toolbar .separator { width: 1px; background: var(--gray-300); margin: 0 4px; }
+    .rich-editor-content { min-height: 120px; padding: 12px; border: 2px solid var(--gray-200); border-radius: 0 0 6px 6px; font-family: inherit; font-size: 0.9rem; line-height: 1.6; overflow-y: auto; max-height: 300px; }
+    .rich-editor-content:focus { outline: none; border-color: var(--primary); }
+    .rich-editor-content ul, .rich-editor-content ol { margin-left: 20px; }
+    .rich-editor-content a { color: var(--primary); }
+    .empty-state-icon { width: 60px; height: 60px; margin: 0 auto 12px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .empty-state-icon svg { width: 30px; height: 30px; stroke: rgba(255,255,255,0.5); }
+    .empty-state h3 { font-family: 'Oswald', sans-serif; font-size: 1.2rem; color: white; margin-bottom: 8px; }
+    .empty-state p { color: rgba(255,255,255,0.6); margin-bottom: 12px; font-size: 0.9rem; }
+    
+    /* Modals */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 400; display: none; align-items: center; justify-content: center; padding: 15px; overflow-y: auto; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: white; border-radius: 12px; max-width: 550px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .modal-header { background: var(--primary); color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px 12px 0 0; position: sticky; top: 0; z-index: 10; }
+    .modal-header h2 { font-family: 'Oswald', sans-serif; font-size: 1.1rem; }
+    .modal-close { background: transparent; border: none; color: white; cursor: pointer; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
+    .modal-close:hover { background: rgba(255,255,255,0.2); }
+    .modal-body { padding: 20px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-weight: 600; margin-bottom: 5px; color: var(--gray-800); font-size: 0.85rem; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 2px solid var(--gray-200); border-radius: 6px; font-family: inherit; font-size: 0.9rem; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); outline: none; }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-hint { font-size: 0.75rem; color: var(--gray-400); margin-top: 4px; }
+    .modal-footer { padding: 14px 20px; border-top: 1px solid var(--gray-200); display: flex; gap: 8px; justify-content: flex-end; position: sticky; bottom: 0; background: white; }
+    
+    /* Preview Modal */
+    .preview-modal { max-width: 800px; }
+    .preview-container { background: var(--gray-100); border-radius: 8px; overflow: hidden; }
+    .preview-container iframe { width: 100%; height: 400px; border: none; }
+    .preview-info { padding: 20px; }
+    .preview-info h4 { font-size: 1.1rem; color: var(--gray-800); margin-bottom: 12px; }
+    .preview-info p { margin-bottom: 8px; color: var(--gray-600); font-size: 0.9rem; }
+    .preview-info .description-box { background: white; padding: 12px; border-radius: 6px; margin-top: 8px; white-space: pre-wrap; border: 1px solid var(--gray-200); }
+    
+    /* Completion Box */
+    .completion-box { margin-top: 16px; padding: 14px; background: #d4edda; border-radius: 8px; border-left: 4px solid var(--success); }
+    .completion-box h5 { color: #155724; font-size: 0.9rem; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .completion-box h5 svg { width: 16px; height: 16px; }
+    .completion-box p { font-size: 0.85rem; color: #155724; margin-bottom: 5px; }
+    .completion-box .notes-box { background: white; padding: 10px; border-radius: 6px; margin-top: 8px; font-size: 0.85rem; }
+    
+    /* Comments Section */
+    .comments-section { margin-top: 20px; border-top: 2px solid var(--gray-200); padding-top: 16px; }
+    .comments-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .comments-header h5 { font-size: 0.95rem; color: var(--gray-800); display: flex; align-items: center; gap: 6px; }
+    .comments-header h5 svg { width: 16px; height: 16px; stroke: var(--purple); }
+    .comments-list { max-height: 300px; overflow-y: auto; margin-bottom: 12px; }
+    .comment-item { padding: 12px; background: var(--gray-100); border-radius: 8px; margin-bottom: 10px; }
+    .comment-item.supervisor { background: #e0e7ff; border-left: 3px solid var(--purple); }
+    .comment-item.admin { background: #fef3c7; border-left: 3px solid var(--accent); }
+    .comment-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .comment-author { font-weight: 600; font-size: 0.85rem; color: var(--gray-800); display: flex; align-items: center; gap: 5px; }
+    .comment-author .role-tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+    .comment-author .role-tag.admin { background: var(--accent); color: #000; }
+    .comment-author .role-tag.supervisor { background: var(--purple); color: white; }
+    .comment-author .role-tag.user { background: var(--success); color: white; }
+    .comment-time { font-size: 0.7rem; color: var(--gray-400); }
+    .comment-text { font-size: 0.85rem; color: var(--gray-600); line-height: 1.5; }
+    .comment-reply-btn { font-size: 0.75rem; color: var(--primary); background: none; border: none; cursor: pointer; margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; }
+    .comment-reply-btn:hover { text-decoration: underline; }
+    .comment-edit-btn { font-size: 0.75rem; color: var(--info); background: none; border: none; cursor: pointer; margin-top: 6px; margin-left: 12px; display: inline-flex; align-items: center; gap: 4px; }
+    .comment-edit-btn:hover { text-decoration: underline; }
+    .comment-actions { display: flex; align-items: center; }
+    .comment-replies { margin-left: 20px; margin-top: 10px; padding-left: 10px; border-left: 2px solid var(--gray-300); }
+    .reply-item { padding: 8px 10px; background: white; border-radius: 6px; margin-bottom: 6px; }
+    .add-comment-box { display: flex; gap: 10px; align-items: flex-end; }
+    .add-comment-box textarea { flex: 1; padding: 10px 12px; border: 2px solid var(--gray-200); border-radius: 6px; font-family: inherit; font-size: 0.85rem; resize: none; min-height: 60px; }
+    .add-comment-box textarea:focus { border-color: var(--purple); outline: none; }
+    .add-comment-box button { display: flex; align-items: center; gap: 6px; }
+    .add-comment-box-container { margin-top: 12px; }
+    .mini-toolbar { display: flex; gap: 4px; margin-bottom: 6px; }
+    .mini-toolbar button { padding: 4px 8px; background: var(--gray-100); border: 1px solid var(--gray-300); border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+    .mini-toolbar button:hover { background: var(--purple); color: white; border-color: var(--purple); }
+    .comment-editor { flex: 1; padding: 10px 12px; border: 2px solid var(--gray-200); border-radius: 6px; font-family: inherit; font-size: 0.85rem; min-height: 60px; max-height: 150px; overflow-y: auto; }
+    .comment-editor:focus { border-color: var(--purple); outline: none; }
+    .comment-editor:empty:before { content: attr(placeholder); color: var(--gray-400); }
+    
+    /* Comment Reactions */
+    .comment-reactions { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .reactions-display { display: flex; gap: 4px; flex-wrap: wrap; }
+    .reaction-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 12px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+    .reaction-badge:hover { background: var(--gray-200); }
+    .reaction-badge.reacted { background: #e0e7ff; border-color: var(--purple); }
+    .reactions-picker { position: relative; }
+    .add-reaction-btn { padding: 4px 8px; background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: var(--gray-600); transition: all 0.2s; }
+    .add-reaction-btn:hover { background: var(--gray-200); }
+    .reaction-picker-popup { display: none; position: absolute; bottom: 100%; left: 0; background: white; border: 1px solid var(--gray-200); border-radius: 8px; padding: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10; margin-bottom: 4px; }
+    .reaction-picker-popup.show { display: flex; gap: 4px; }
+    .reaction-option { font-size: 1.2rem; cursor: pointer; padding: 4px; border-radius: 4px; transition: all 0.2s; }
+    .reaction-option:hover { background: var(--gray-100); transform: scale(1.2); }
+    
+    /* Comment Attachments */
+    .comment-attachment { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--gray-100); border-radius: 6px; margin-top: 8px; font-size: 0.85rem; }
+    .comment-attachment svg { stroke: var(--gray-600); flex-shrink: 0; }
+    .comment-attachment span { color: var(--gray-800); font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .comment-attachment .download-link { color: var(--primary); font-weight: 600; text-decoration: none; }
+    .comment-attachment .download-link:hover { text-decoration: underline; }
+    
+    /* Comment File Upload */
+    .comment-file-upload { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .comment-file-btn { padding: 6px 10px; background: var(--gray-100); border: 1px solid var(--gray-300); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 0.8rem; color: var(--gray-600); transition: all 0.2s; }
+    .comment-file-btn:hover { background: var(--gray-200); }
+    .comment-file-name { font-size: 0.8rem; color: var(--success); font-weight: 600; }
+    .comment-file-remove { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 0.8rem; padding: 2px 6px; }
+    
+    /* Confirm Modal */
+    .confirm-modal { max-width: 400px; text-align: center; }
+    .confirm-modal-header { background: var(--danger); color: white; padding: 20px; border-radius: 12px 12px 0 0; }
+    .confirm-modal-header.success { background: var(--success); }
+    .confirm-modal-header svg { width: 40px; height: 40px; margin-bottom: 8px; }
+    .confirm-modal-body { padding: 20px; }
+    .confirm-modal-body p { color: var(--gray-600); margin-bottom: 8px; }
+    .confirm-modal-body .item-title-confirm { font-weight: 700; color: var(--gray-800); padding: 10px; background: var(--gray-100); border-radius: 6px; margin: 12px 0; }
+    .confirm-modal-footer { padding: 14px; border-top: 1px solid var(--gray-200); display: flex; gap: 8px; justify-content: center; }
+    
+    /* Loading & Notification */
+    .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .loading-overlay.active { opacity: 1; pointer-events: all; }
+    .loading-spinner { width: 40px; height: 40px; border: 4px solid rgba(255,193,7,0.3); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: white; margin-top: 14px; font-size: 0.95rem; }
+    .notification { position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-20px); padding: 12px 24px; border-radius: 8px; font-weight: 600; z-index: 600; opacity: 0; pointer-events: none; transition: all 0.3s; box-shadow: 0 5px 20px rgba(0,0,0,0.3); font-size: 0.9rem; }
+    .notification.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .notification.success { background: #d4edda; color: #155724; }
+    .notification.error { background: #f8d7da; color: #721c24; }
+    .notification.info { background: #e7f3ff; color: var(--primary); }
+    
+    /* Footer */
+    .footer { background: var(--primary); color: white; padding: 14px 30px; text-align: center; font-size: 0.8rem; }
+    .footer p { margin: 3px 0; opacity: 0.9; }
+    
+    /* Settings Panel */
+    .settings-panel { background: #fff3cd; padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; border: 1px solid #ffc107; }
+    .settings-panel h4 { font-size: 0.9rem; color: #856404; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .settings-panel h4 svg { width: 16px; height: 16px; }
+    .settings-panel p { font-size: 0.8rem; color: #856404; margin-bottom: 8px; }
+    .settings-panel input { padding: 8px 10px; border: 1px solid #ffc107; border-radius: 4px; font-size: 0.85rem; width: 100%; max-width: 400px; }
+    .settings-panel .btn { margin-top: 8px; }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header { padding: 8px 12px; }
+      .header-text p { display: none; }
+      .header-text h1 { font-size: 1rem; }
+      .search-container { order: 3; flex: 100%; max-width: 100%; margin-top: 6px; }
+      .main { padding: 12px; }
+      .section-tab { padding: 5px 8px; font-size: 0.7rem; }
+      .items-grid { grid-template-columns: 1fr; }
+      .user-badge span:not(.role-label) { display: none; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Login -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-container">
+      <div class="login-logo">
+        <img src="https://github.com/mohamedsillahkanu/gdp-dashboard-2/raw/6c7463b0d5c3be150aafae695a4bcbbd8aeb1499/ICF-SL.jpg" alt="ICF-SL">
+        <div class="login-logo-text">
+          <h1>SNT Data Assembly</h1>
+          <p>Centralized Data Management</p>
+        </div>
+      </div>
+      <h2 class="login-title">Sign In</h2>
+      <div class="login-error" id="loginError">Invalid credentials</div>
+      <form class="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="username" placeholder="Enter username" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="Enter password" required>
+        </div>
+        <button type="submit" class="login-btn">Sign In</button>
+      </form>
+      <div class="login-hint">
+        <strong>Access Credentials:</strong><br>
+        user / user <span class="role-tag user">User</span><br>
+        supervisor / supervisor <span class="role-tag supervisor">Supervisor</span><br>
+        admin / admin <span class="role-tag admin">Admin</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div class="app-container" id="appContainer">
+    <header class="header">
+      <div class="header-brand">
+        <div class="logo-box">
+          <img src="https://github.com/mohamedsillahkanu/gdp-dashboard-2/raw/6c7463b0d5c3be150aafae695a4bcbbd8aeb1499/ICF-SL.jpg" alt="ICF-SL">
+        </div>
+        <div class="header-text">
+          <h1>SNT DATA ASSEMBLY</h1>
+          <p>Centralized Data Management</p>
+        </div>
+      </div>
+      <div class="search-container">
+        <div class="search-box">
+          <input type="text" class="search-input" id="searchInput" placeholder="Search..." oninput="handleSearch(this.value)">
+          <button class="search-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></button>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="user-badge" id="userBadge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span id="userDisplay">User</span>
+          <span class="role-label" id="roleDisplay">User</span>
+        </div>
+        <button class="btn btn-gold" id="addBtn" onclick="openAddModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add
+        </button>
+        <button class="btn btn-outline" onclick="logout()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </button>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- Google Script Settings (Admin only) -->
+      <div class="settings-panel" id="settingsPanel" style="display:none;">
+        <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Google Apps Script URL</h4>
+        <p>Enter your deployed Google Apps Script Web App URL for email notifications and Drive backup</p>
+        <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/..." value="">
+        <button class="btn btn-gold" onclick="saveScriptUrl()">Save URL</button>
+        <button class="btn btn-info" onclick="testConnection()">Test Connection</button>
+      </div>
+
+      <div class="section-nav">
+        <button class="section-nav-btn" onclick="prevSection()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <div class="section-tabs" id="sectionTabs"></div>
+        <button class="section-nav-btn" onclick="nextSection()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></button>
+      </div>
+      
+      <div class="section-header">
+        <div class="section-icon" id="sectionIcon"></div>
+        <div>
+          <div class="section-title" id="sectionTitle">All Items</div>
+          <div class="section-subtitle" id="sectionSubtitle">Loading...</div>
+        </div>
+      </div>
+      
+      <div class="items-grid" id="itemsGrid"></div>
+    </main>
+
+    <footer class="footer">
+      <p><strong>Informatics Consultancy Firm - Sierra Leone (ICF-SL)</strong></p>
+      <p>Health Information Systems | Data Analytics | Digital Solutions</p>
+    </footer>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add New Item</h2>
+        <button class="modal-close" onclick="closeAddModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Title *</label>
+          <input type="text" id="itemTitle" placeholder="Enter title">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Section *</label>
+            <select id="itemSection" onchange="updateFormFields()">
+              <option value="routine-epi">Routine Epi Data</option>
+              <option value="routine-intervention">Routine Intervention</option>
+              <option value="routine-stockout">Routine Stockout</option>
+              <option value="campaign">Campaign Data</option>
+              <option value="other-dataset">Other Dataset</option>
+              <option value="report">Report</option>
+              <option value="output">Output Files</option>
+              <option value="email">Email</option>
+              <option value="meeting">Meeting Minutes</option>
+              <option value="nextstep">Next Steps</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label id="dateLabel">Date *</label>
+            <input type="date" id="itemDate">
+          </div>
+        </div>
+        <div id="nextstepFields" style="display:none;">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Due Date</label>
+              <input type="date" id="itemDueDate">
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select id="itemStatus">
+                <option value="pending">Pending</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Assign To (Name)</label>
+            <input type="text" id="itemAssignee" placeholder="Person responsible">
+          </div>
+          <div class="form-group">
+            <label>Assignee Email</label>
+            <input type="email" id="itemAssigneeEmail" placeholder="email@example.com">
+            <div class="form-hint">Email notification will be sent when task is assigned</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description / Message</label>
+          <div class="rich-editor-toolbar" id="editorToolbar">
+            <button type="button" onclick="formatText('bold')" title="Bold"><strong>B</strong></button>
+            <button type="button" onclick="formatText('italic')" title="Italic"><em>I</em></button>
+            <button type="button" onclick="formatText('underline')" title="Underline"><u>U</u></button>
+            <span class="separator"></span>
+            <button type="button" onclick="formatText('insertUnorderedList')" title="Bullet List">• List</button>
+            <button type="button" onclick="formatText('insertOrderedList')" title="Numbered List">1. List</button>
+            <span class="separator"></span>
+            <button type="button" onclick="formatText('formatBlock', 'h3')" title="Heading">H</button>
+            <button type="button" onclick="insertLink()" title="Insert Link">🔗 Link</button>
+            <span class="separator"></span>
+            <button type="button" onclick="formatText('removeFormat')" title="Clear Formatting">Clear</button>
+          </div>
+          <div class="rich-editor-content" id="itemDescription" contenteditable="true" placeholder="Enter details..."></div>
+        </div>
+        
+        <!-- Email specific: Recipients -->
+        <div class="form-group" id="emailRecipientsGroup" style="display:none;">
+          <label>Send Email Notification To</label>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="display:flex;align-items:center;gap:8px;font-weight:normal;cursor:pointer;">
+              <input type="checkbox" id="notifyAll" checked> 
+              <span>All platform users</span>
+            </label>
+            <input type="text" id="additionalEmails" placeholder="Additional emails (comma separated)">
+            <div class="form-hint">Leave empty to only notify platform users, or add external emails</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Upload File</label>
+          <div class="file-upload-zone" id="fileUploadZone" onclick="document.getElementById('fileInput').click()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:36px;height:36px;stroke:#666;margin-bottom:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p style="margin:0;color:#333;font-weight:600;">Click to upload or drag & drop</p>
+            <p style="margin:4px 0 0;color:#666;font-size:0.8rem;">PDF, Excel, Word, PowerPoint</p>
+            <p class="file-name-display" id="fileNameDisplay" style="margin-top:8px;color:var(--primary);font-weight:600;"></p>
+          </div>
+          <input type="file" id="fileInput" accept=".pdf,.xlsx,.xls,.docx,.doc,.pptx,.ppt" style="display:none" onchange="handleFileSelect(this)">
+        </div>
+        <div class="form-group">
+          <label>File Type</label>
+          <select id="itemFileType">
+            <option value="">Auto-detect</option>
+            <option value="pdf">PDF</option>
+            <option value="excel">Excel</option>
+            <option value="word">Word</option>
+            <option value="ppt">PowerPoint</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <input type="hidden" id="itemFileUrl" value="">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeAddModal()" style="color:#333;border-color:#ccc;">Cancel</button>
+        <button class="btn btn-gold" onclick="saveItem()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview/Detail Modal -->
+  <div class="modal-overlay" id="previewModal">
+    <div class="modal preview-modal">
+      <div class="modal-header">
+        <h2 id="previewTitle">Details</h2>
+        <button class="modal-close" onclick="closePreviewModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div class="preview-container" id="previewContainer"></div>
+        <div class="comments-section" id="commentsSection"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closePreviewModal()" style="color:#333;border-color:#ccc;">Close</button>
+        <button class="btn btn-success" id="previewDownloadBtn" style="display:none;" onclick="downloadPreviewFile()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </button>
+        <button class="btn btn-info" id="previewOpenBtn" style="display:none;" onclick="openPreviewFile()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Open File
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Complete Task Modal -->
+  <div class="modal-overlay" id="completeModal">
+    <div class="modal">
+      <div class="modal-header" style="background: var(--success);">
+        <h2>Mark Task Complete</h2>
+        <button class="modal-close" onclick="closeCompleteModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div id="completeTaskInfo" style="background:var(--gray-100);padding:12px;border-radius:8px;margin-bottom:14px;"></div>
+        <div class="form-group">
+          <label>Completion Notes *</label>
+          <textarea id="completionNotes" placeholder="Describe what was done, outcomes, results..." rows="4"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Evidence URL (Optional)</label>
+          <input type="text" id="completionFileUrl" placeholder="Link to supporting document">
+        </div>
+        <div class="form-group">
+          <label>Completion Date</label>
+          <input type="date" id="completionDate">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeCompleteModal()" style="color:#333;border-color:#ccc;">Cancel</button>
+        <button class="btn btn-success" onclick="confirmComplete()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Complete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Modal -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal confirm-modal">
+      <div class="confirm-modal-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><h3>Delete Item</h3></div>
+      <div class="confirm-modal-body"><p>Are you sure you want to delete?</p><p class="item-title-confirm" id="deleteItemTitle"></p><p>This cannot be undone.</p></div>
+      <div class="confirm-modal-footer"><button class="btn btn-outline" onclick="closeDeleteModal()" style="color:#333;border-color:#ccc;">Cancel</button><button class="btn btn-danger" onclick="confirmDelete()">Delete</button></div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div><div class="loading-text" id="loadingText">Loading...</div></div>
+  <div class="notification" id="notification"></div>
+
+  <script>
+    // ==================== ICONS ====================
+    const icons = {
+      folder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
+      chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+      activity: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+      package: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>',
+      target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+      database: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
+      fileText: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+      upload: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+      email: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+      meeting: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+      nextstep: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+      file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+      calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+      eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+      check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+      comment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+      user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+      send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
+      reply: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>'
+    };
+
+    // ==================== SECTIONS ====================
+    const sections = [
+      { id: 'all', name: 'All Items', icon: 'folder', description: 'Browse all items' },
+      { id: 'routine-epi', name: 'Routine Epi', icon: 'chart', description: 'Epidemiological data', items: [] },
+      { id: 'routine-intervention', name: 'Intervention', icon: 'activity', description: 'Intervention data', items: [] },
+      { id: 'routine-stockout', name: 'Stockout', icon: 'package', description: 'Stock data', items: [] },
+      { id: 'campaign', name: 'Campaign', icon: 'target', description: 'Campaign datasets', items: [] },
+      { id: 'other-dataset', name: 'Other', icon: 'database', description: 'Other datasets', items: [] },
+      { id: 'report', name: 'Report', icon: 'fileText', description: 'Reports', items: [] },
+      { id: 'output', name: 'Output', icon: 'upload', description: 'Outputs', items: [] },
+      { id: 'email', name: 'Email', icon: 'email', description: 'Emails', items: [] },
+      { id: 'meeting', name: 'Meeting', icon: 'meeting', description: 'Meeting notes', items: [] },
+      { id: 'nextstep', name: 'Next Steps', icon: 'nextstep', description: 'Action items', items: [] }
+    ];
+
+    // ==================== STATE ====================
+    let currentUser = null;
+    let userRole = 'user'; // user, supervisor, admin
+    let currentSectionIndex = 0;
+    let currentItems = [];
+    let itemToDelete = null;
+    let itemToComplete = null;
+    let previewItem = null;
+    let editingItem = null;
+    let replyingTo = null;
+    let selectedFile = null;
+
+    // ==================== STORAGE ====================
+    // Platform users for email notifications
+    const platformUsers = [
+      { name: 'Admin', email: 'admin@example.com', role: 'admin' },
+      { name: 'Supervisor', email: 'supervisor@example.com', role: 'supervisor' },
+      { name: 'User', email: 'user@example.com', role: 'user' }
+    ];
+    
+    function loadFromStorage() {
+      const saved = localStorage.getItem('sntDataV3');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        parsed.forEach(item => {
+          const section = sections.find(s => s.id === item.section);
+          if (section?.items && !section.items.find(i => i.id === item.id)) {
+            section.items.push(item);
+          }
+        });
+      }
+    }
+
+    function saveToStorage() {
+      const all = sections.flatMap(s => s.items || []);
+      localStorage.setItem('sntDataV3', JSON.stringify(all));
+      // Also sync to Google Drive if script URL is set
+      syncToGoogleDrive();
+    }
+
+    function getScriptUrl() {
+      return localStorage.getItem('sntScriptUrl') || '';
+    }
+
+    function saveScriptUrl() {
+      const url = document.getElementById('scriptUrl').value.trim();
+      localStorage.setItem('sntScriptUrl', url);
+      showNotification('Script URL saved!', 'success');
+    }
+
+    // ==================== GOOGLE APPS SCRIPT INTEGRATION ====================
+    async function syncToGoogleDrive() {
+      const scriptUrl = getScriptUrl();
+      if (!scriptUrl) return;
+      
+      try {
+        const all = sections.flatMap(s => s.items || []);
+        await fetch(scriptUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'sync', data: all })
+        });
+      } catch (e) {
+        console.log('Sync error:', e);
+      }
+    }
+
+    async function sendEmailNotification(to, subject, body) {
+      const scriptUrl = getScriptUrl();
+      if (!scriptUrl || !to) return;
+      
+      try {
+        await fetch(scriptUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'email', to, subject, body })
+        });
+      } catch (e) {
+        console.log('Email error:', e);
+      }
+    }
+
+    async function testConnection() {
+      const scriptUrl = getScriptUrl();
+      if (!scriptUrl) {
+        showNotification('Please enter Script URL first', 'error');
+        return;
+      }
+      showLoading('Testing connection...');
+      try {
+        await fetch(scriptUrl + '?action=test', { mode: 'no-cors' });
+        hideLoading();
+        showNotification('Connection test sent! Check your Google Apps Script logs.', 'info');
+      } catch (e) {
+        hideLoading();
+        showNotification('Connection failed: ' + e.message, 'error');
+      }
+    }
+
+    // ==================== AUTH ====================
+    function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('username').value.trim().toLowerCase();
+      const p = document.getElementById('password').value;
+      
+      if (u === 'admin' && p === 'admin') { currentUser = 'Admin'; userRole = 'admin'; }
+      else if (u === 'supervisor' && p === 'supervisor') { currentUser = 'Supervisor'; userRole = 'supervisor'; }
+      else if (u === 'user' && p === 'user') { currentUser = 'User'; userRole = 'user'; }
+      else {
+        document.getElementById('loginError').classList.add('show');
+        setTimeout(() => document.getElementById('loginError').classList.remove('show'), 3000);
+        return;
+      }
+      
+      showApp();
+    }
+
+    function showApp() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('appContainer').classList.add('active');
+      document.getElementById('userDisplay').textContent = currentUser;
+      document.getElementById('roleDisplay').textContent = userRole.charAt(0).toUpperCase() + userRole.slice(1);
+      
+      const badge = document.getElementById('userBadge');
+      badge.className = 'user-badge ' + userRole;
+      
+      // Show settings panel for admin
+      document.getElementById('settingsPanel').style.display = userRole === 'admin' ? 'block' : 'none';
+      document.getElementById('scriptUrl').value = getScriptUrl();
+      
+      // All users can add items
+      document.getElementById('addBtn').style.display = 'flex';
+      
+      loadFromStorage();
+      renderTabs();
+      loadSection(0);
+    }
+
+    function logout() {
+      currentUser = null;
+      userRole = 'user';
+      document.getElementById('loginScreen').classList.remove('hidden');
+      document.getElementById('appContainer').classList.remove('active');
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+    }
+
+    // ==================== SECTIONS ====================
+    function renderTabs() {
+      document.getElementById('sectionTabs').innerHTML = sections.map((s, i) => 
+        `<button class="section-tab ${i === 0 ? 'active' : ''}" onclick="loadSection(${i})">${icons[s.icon] || icons.folder}<span>${s.name}</span><span class="tab-count">${getCount(s)}</span></button>`
+      ).join('');
+    }
+
+    function getCount(s) {
+      if (s.id === 'all') return sections.reduce((n, x) => n + (x.items?.length || 0), 0);
+      return s.items?.length || 0;
+    }
+
+    function loadSection(idx) {
+      currentSectionIndex = idx;
+      const s = sections[idx];
+      document.querySelectorAll('.section-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+      document.getElementById('sectionIcon').innerHTML = icons[s.icon] || icons.folder;
+      document.getElementById('sectionTitle').textContent = s.name;
+      
+      if (s.id === 'all') {
+        currentItems = sections.flatMap(x => (x.items || []).map(item => ({...item, sectionName: x.name})));
+      } else {
+        currentItems = (s.items || []).map(item => ({...item, sectionName: s.name}));
+      }
+      
+      // Sort by date desc, incomplete tasks first for nextsteps
+      currentItems.sort((a, b) => {
+        if (a.section === 'nextstep' && b.section === 'nextstep') {
+          if (a.status === 'completed' && b.status !== 'completed') return 1;
+          if (a.status !== 'completed' && b.status === 'completed') return -1;
+        }
+        return new Date(b.date || 0) - new Date(a.date || 0);
+      });
+      
+      document.getElementById('sectionSubtitle').textContent = `${currentItems.length} item${currentItems.length !== 1 ? 's' : ''} - ${s.description}`;
+      renderItems();
+    }
+
+    function prevSection() { if (currentSectionIndex > 0) loadSection(currentSectionIndex - 1); }
+    function nextSection() { if (currentSectionIndex < sections.length - 1) loadSection(currentSectionIndex + 1); }
+
+    // ==================== HELPERS ====================
+    function formatDate(d) {
+      if (!d) return '';
+      return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function formatDateTime(d) {
+      if (!d) return '';
+      return new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
+
+    function getStatusClass(item) {
+      if (item.section !== 'nextstep') return '';
+      if (item.status === 'completed') return 'completed';
+      if (item.status === 'in-progress') return 'in-progress';
+      if (item.dueDate && new Date(item.dueDate) < new Date()) return 'overdue';
+      return 'pending';
+    }
+
+    function getStatusLabel(item) {
+      const c = getStatusClass(item);
+      return { completed: 'Completed', 'in-progress': 'In Progress', overdue: 'Overdue', pending: 'Pending' }[c] || 'Pending';
+    }
+
+    function getItemIcon(item) {
+      if (item.section === 'email') return 'email';
+      if (item.section === 'meeting') return 'meeting';
+      if (item.section === 'nextstep') return 'nextstep';
+      return item.fileType || 'file';
+    }
+
+    function getFileTypeLabel(t) {
+      return { pdf: 'PDF', excel: 'Excel', word: 'Word', ppt: 'PPT' }[t] || 'File';
+    }
+
+    function detectFileType(url) {
+      if (!url) return 'other';
+      const u = url.toLowerCase();
+      if (u.includes('.pdf') || u.includes('pdf')) return 'pdf';
+      if (u.includes('.xls') || u.includes('spreadsheet')) return 'excel';
+      if (u.includes('.doc') || u.includes('document')) return 'word';
+      if (u.includes('.ppt') || u.includes('presentation')) return 'ppt';
+      return 'other';
+    }
+
+    function extractGoogleDriveId(url) {
+      const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      return m ? m[1] : null;
+    }
+
+    function getGoogleDrivePreviewUrl(url) {
+      const id = extractGoogleDriveId(url);
+      if (id) return `https://drive.google.com/file/d/${id}/preview`;
+      return url;
+    }
+
+    // ==================== RENDER ITEMS ====================
+    function renderItems() {
+      const grid = document.getElementById('itemsGrid');
+      if (!currentItems.length) {
+        grid.innerHTML = `<div class="empty-state">
+          <div class="empty-state-icon">${icons.folder}</div>
+          <h3>No items</h3>
+          <p>Click the button below to add new items</p>
+          <button class="btn btn-gold" onclick="openAddModal()" style="margin-top:10px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Item
+          </button>
+        </div>`;
+        return;
+      }
+
+      grid.innerHTML = currentItems.map((item, i) => {
+        const iconType = getItemIcon(item);
+        const statusClass = getStatusClass(item);
+        const isCompleted = item.status === 'completed';
+        const isOverdue = statusClass === 'overdue';
+        const commentCount = (item.comments || []).length;
+        const canComplete = item.section === 'nextstep' && !isCompleted && (userRole === 'supervisor' || userRole === 'admin');
+        const canEdit = !(item.section === 'nextstep' && userRole === 'user');  // Users can't edit Next Steps
+        const canDelete = userRole === 'admin';
+
+        return `
+        <div class="item-card ${isCompleted ? 'completed' : ''} ${isOverdue ? 'overdue' : ''}">
+          <div class="item-card-header">
+            <div class="item-type-icon ${iconType}">${icons[iconType] || icons.file}</div>
+            <div class="item-info">
+              <div class="item-name">${item.title}</div>
+              <div class="item-meta">
+                ${item.date ? `<span class="item-date">${icons.calendar} ${formatDate(item.date)}</span>` : ''}
+                ${item.section === 'nextstep' ? `<span class="status-badge ${statusClass}">${getStatusLabel(item)}</span>` : ''}
+                ${item.fileName ? `<span>${item.fileName}</span>` : (item.fileType ? `<span>${getFileTypeLabel(item.fileType)}</span>` : '')}
+              </div>
+            </div>
+          </div>
+          <div class="item-card-body">
+            ${item.assignee ? `
+              <div class="item-assignee">
+                ${icons.user}
+                <div>
+                  <span class="assignee-name">${item.assignee}</span>
+                  ${item.assigneeEmail ? `<span class="assignee-email">${item.assigneeEmail}</span>` : ''}
+                </div>
+              </div>
+            ` : ''}
+            ${item.dueDate && item.section === 'nextstep' ? `<p style="font-size:0.8rem;color:${isOverdue && !isCompleted ? 'var(--danger)' : 'var(--gray-600)'};margin-bottom:8px;font-weight:${isOverdue ? '600' : '400'};">Due: ${formatDate(item.dueDate)}</p>` : ''}
+            <div class="item-description">${item.description || 'No description'}</div>
+            ${commentCount > 0 ? `<div class="comments-indicator" onclick="openPreview(${i})"><span>${icons.comment}</span><span class="count">${commentCount}</span> comment${commentCount !== 1 ? 's' : ''}</div>` : ''}
+            <div class="item-card-actions">
+              <button class="item-btn item-btn-view" onclick="openPreview(${i})">${icons.eye} View</button>
+              ${item.fileUrl ? `<button class="item-btn item-btn-download" onclick="downloadFile(${i})">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download
+              </button>` : ''}
+              <button class="item-btn item-btn-comment" onclick="openPreview(${i}, true)">${icons.comment} Comment</button>
+              ${canComplete ? `<button class="item-btn item-btn-complete" onclick="openCompleteModal(${i})">${icons.check} Done</button>` : ''}
+              ${canEdit ? `<button class="item-btn item-btn-edit" onclick="openEditModal(${i})">${icons.file}</button>` : ''}
+              ${canDelete ? `<button class="item-btn item-btn-delete" onclick="openDeleteModal(${i})">${icons.file}</button>` : ''}
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ==================== SEARCH ====================
+    function handleSearch(q) {
+      if (!q.trim()) { loadSection(currentSectionIndex); return; }
+      const query = q.toLowerCase();
+      currentItems = sections.flatMap(s => (s.items || []).filter(i => 
+        i.title.toLowerCase().includes(query) || 
+        (i.description && i.description.toLowerCase().includes(query)) ||
+        (i.assignee && i.assignee.toLowerCase().includes(query))
+      ).map(i => ({...i, sectionName: s.name})));
+      document.getElementById('sectionSubtitle').textContent = `${currentItems.length} result${currentItems.length !== 1 ? 's' : ''}`;
+      renderItems();
+    }
+
+    // ==================== FILE HANDLING ====================
+    function handleFileSelect(input) {
+      const file = input.files ? input.files[0] : null;
+      if (file) {
+        const validTypes = [
+          'application/pdf',
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'application/vnd.ms-powerpoint',
+          'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+        ];
+        const validExtensions = /\.(pdf|xlsx?|docx?|pptx?)$/i;
+        
+        if (validTypes.includes(file.type) || validExtensions.test(file.name)) {
+          selectedFile = file;
+          document.getElementById('fileNameDisplay').textContent = file.name;
+          document.getElementById('fileUploadZone').classList.add('has-file');
+          showNotification('File selected: ' + file.name, 'success');
+        } else {
+          showNotification('Invalid file type. Please upload PDF, Excel, Word, or PowerPoint.', 'error');
+          if (input.value) input.value = '';
+        }
+      }
+    }
+
+    function clearFileSelection() {
+      selectedFile = null;
+      document.getElementById('fileInput').value = '';
+      document.getElementById('fileNameDisplay').textContent = '';
+      document.getElementById('fileUploadZone').classList.remove('has-file');
+    }
+
+    // ==================== RICH TEXT EDITOR ====================
+    function formatText(command, value = null) {
+      document.execCommand(command, false, value);
+      document.getElementById('itemDescription').focus();
+    }
+
+    function insertLink() {
+      const url = prompt('Enter URL:');
+      if (url) {
+        document.execCommand('createLink', false, url);
+      }
+      document.getElementById('itemDescription').focus();
+    }
+
+    function getEditorContent() {
+      return document.getElementById('itemDescription').innerHTML;
+    }
+
+    function setEditorContent(html) {
+      document.getElementById('itemDescription').innerHTML = html || '';
+    }
+
+    function stripHtml(html) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || '';
+    }
+
+    // ==================== ADD/EDIT MODAL ====================
+    function openAddModal() {
+      editingItem = null;
+      document.getElementById('modalTitle').textContent = 'Add New Item';
+      document.getElementById('itemTitle').value = '';
+      
+      // Disable Next Steps option for regular users
+      const nextstepOption = document.querySelector('#itemSection option[value="nextstep"]');
+      if (nextstepOption) {
+        if (userRole === 'user') {
+          nextstepOption.disabled = true;
+          nextstepOption.textContent = 'Next Steps (Supervisor only)';
+        } else {
+          nextstepOption.disabled = false;
+          nextstepOption.textContent = 'Next Steps';
+        }
+      }
+      
+      document.getElementById('itemSection').value = currentSectionIndex > 0 ? sections[currentSectionIndex].id : 'routine-epi';
+      // If current section is nextstep and user is regular user, default to routine-epi
+      if (document.getElementById('itemSection').value === 'nextstep' && userRole === 'user') {
+        document.getElementById('itemSection').value = 'routine-epi';
+      }
+      
+      document.getElementById('itemDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('itemDueDate').value = '';
+      document.getElementById('itemStatus').value = 'pending';
+      document.getElementById('itemAssignee').value = '';
+      document.getElementById('itemAssigneeEmail').value = '';
+      setEditorContent('');
+      document.getElementById('itemFileUrl').value = '';
+      document.getElementById('itemFileType').value = '';
+      if (document.getElementById('notifyAll')) document.getElementById('notifyAll').checked = true;
+      if (document.getElementById('additionalEmails')) document.getElementById('additionalEmails').value = '';
+      clearFileSelection();
+      updateFormFields();
+      document.getElementById('addModal').classList.add('active');
+    }
+
+    function openEditModal(i) {
+      const item = currentItems[i];
+      if (!item) return;
+      
+      // Prevent users from editing Next Steps items
+      if (item.section === 'nextstep' && userRole === 'user') {
+        showNotification('Only Supervisors can edit Next Steps', 'error');
+        return;
+      }
+      
+      editingItem = item;
+      document.getElementById('modalTitle').textContent = 'Edit Item';
+      document.getElementById('itemTitle').value = item.title || '';
+      
+      // Disable Next Steps option for regular users
+      const nextstepOption = document.querySelector('#itemSection option[value="nextstep"]');
+      if (nextstepOption) {
+        if (userRole === 'user') {
+          nextstepOption.disabled = true;
+          nextstepOption.textContent = 'Next Steps (Supervisor only)';
+        } else {
+          nextstepOption.disabled = false;
+          nextstepOption.textContent = 'Next Steps';
+        }
+      }
+      
+      document.getElementById('itemSection').value = item.section;
+      document.getElementById('itemDate').value = item.date || '';
+      document.getElementById('itemDueDate').value = item.dueDate || '';
+      document.getElementById('itemStatus').value = item.status || 'pending';
+      document.getElementById('itemAssignee').value = item.assignee || '';
+      document.getElementById('itemAssigneeEmail').value = item.assigneeEmail || '';
+      setEditorContent(item.description || '');
+      document.getElementById('itemFileUrl').value = item.fileUrl || '';
+      document.getElementById('itemFileType').value = item.fileType || '';
+      clearFileSelection();
+      if (item.fileName) {
+        document.getElementById('fileNameDisplay').textContent = item.fileName + ' (existing)';
+        document.getElementById('fileUploadZone').classList.add('has-file');
+      }
+      updateFormFields();
+      document.getElementById('addModal').classList.add('active');
+    }
+
+    function closeAddModal() {
+      document.getElementById('addModal').classList.remove('active');
+      editingItem = null;
+      selectedFile = null;
+    }
+
+    // Initialize drag and drop
+    document.addEventListener('DOMContentLoaded', function() {
+      const dropZone = document.getElementById('fileUploadZone');
+      if (dropZone) {
+        dropZone.addEventListener('dragover', function(e) {
+          e.preventDefault();
+          dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', function() {
+          dropZone.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', function(e) {
+          e.preventDefault();
+          dropZone.classList.remove('dragover');
+          const files = e.dataTransfer.files;
+          if (files.length) {
+            document.getElementById('fileInput').files = files;
+            handleFileSelect({ files: [files[0]] });
+          }
+        });
+      }
+      
+      // Close reaction pickers when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.reactions-picker')) {
+          document.querySelectorAll('.reaction-picker-popup').forEach(p => p.classList.remove('show'));
+        }
+      });
+    });
+
+    function updateFormFields() {
+      const sectionSelect = document.getElementById('itemSection');
+      const isNS = sectionSelect.value === 'nextstep';
+      const isEmail = sectionSelect.value === 'email';
+      
+      // If user selects nextstep but is not supervisor/admin, reset to first option
+      if (isNS && userRole === 'user') {
+        showNotification('Only Supervisors can create Next Steps', 'error');
+        sectionSelect.value = 'routine-epi';
+        document.getElementById('nextstepFields').style.display = 'none';
+        document.getElementById('emailRecipientsGroup').style.display = 'none';
+        return;
+      }
+      
+      document.getElementById('nextstepFields').style.display = isNS ? 'block' : 'none';
+      document.getElementById('emailRecipientsGroup').style.display = isEmail ? 'block' : 'none';
+      const s = sectionSelect.value;
+      document.getElementById('dateLabel').textContent = s === 'email' ? 'Email Date *' : s === 'meeting' ? 'Meeting Date *' : isNS ? 'Created Date *' : 'Date *';
+    }
+
+    function saveItem() {
+      const title = document.getElementById('itemTitle').value.trim();
+      const sectionId = document.getElementById('itemSection').value;
+      const date = document.getElementById('itemDate').value;
+      const dueDate = document.getElementById('itemDueDate').value;
+      const status = document.getElementById('itemStatus').value;
+      const assignee = document.getElementById('itemAssignee').value.trim();
+      const assigneeEmail = document.getElementById('itemAssigneeEmail').value.trim();
+      const description = getEditorContent();
+      let fileUrl = document.getElementById('itemFileUrl').value.trim();
+      let fileType = document.getElementById('itemFileType').value;
+      let fileName = editingItem?.fileName || null;
+      
+      if (!title) { showNotification('Enter title', 'error'); return; }
+      if (!date) { showNotification('Select date', 'error'); return; }
+      
+      // Prevent users from creating Next Steps
+      if (sectionId === 'nextstep' && userRole === 'user') {
+        showNotification('Only Supervisors can create Next Steps', 'error');
+        return;
+      }
+      
+      // Handle uploaded file
+      if (selectedFile) {
+        fileUrl = URL.createObjectURL(selectedFile);
+        fileName = selectedFile.name;
+        fileType = detectFileType(selectedFile.name);
+      } else if (fileUrl && !fileType) {
+        fileType = detectFileType(fileUrl);
+      }
+      
+      showLoading('Saving...');
+      
+      const isNew = !editingItem;
+      const itemData = {
+        id: editingItem?.id || 'item-' + Date.now(),
+        title, section: sectionId, date,
+        dueDate: sectionId === 'nextstep' ? dueDate : null,
+        status: sectionId === 'nextstep' ? status : null,
+        assignee: sectionId === 'nextstep' ? assignee : null,
+        assigneeEmail: sectionId === 'nextstep' ? assigneeEmail : null,
+        description, 
+        fileUrl: fileUrl || editingItem?.fileUrl || null, 
+        fileName: fileName,
+        fileType: fileType || editingItem?.fileType || null,
+        comments: editingItem?.comments || [],
+        createdBy: editingItem?.createdBy || currentUser,
+        createdAt: editingItem?.createdAt || new Date().toISOString()
+      };
+      
+      const section = sections.find(s => s.id === sectionId);
+      if (section?.items) {
+        if (editingItem) {
+          sections.forEach(s => {
+            if (s.items) {
+              const idx = s.items.findIndex(i => i.id === editingItem.id);
+              if (idx !== -1) s.items.splice(idx, 1);
+            }
+          });
+        }
+        section.items.push(itemData);
+      }
+      
+      saveToStorage();
+      
+      // Send email notification if new task assigned
+      if (isNew && sectionId === 'nextstep' && assigneeEmail) {
+        sendEmailNotification(
+          assigneeEmail,
+          `New Task Assigned: ${title}`,
+          `You have been assigned a new task:\n\nTitle: ${title}\nDue Date: ${dueDate || 'Not set'}\nDescription: ${stripHtml(description)}\n\nPlease log in to SNT Data Assembly to view details.`
+        );
+      }
+      
+      // Send email notification to all platform users when email is posted
+      if (isNew && sectionId === 'email') {
+        const notifyAll = document.getElementById('notifyAll')?.checked;
+        const additionalEmails = document.getElementById('additionalEmails')?.value.trim();
+        
+        // Collect all recipients
+        let recipients = [];
+        if (notifyAll) {
+          recipients = platformUsers.map(u => u.email).filter(e => e);
+        }
+        if (additionalEmails) {
+          const extras = additionalEmails.split(',').map(e => e.trim()).filter(e => e);
+          recipients = [...recipients, ...extras];
+        }
+        
+        // Send to each recipient
+        const plainDescription = stripHtml(description);
+        recipients.forEach(email => {
+          sendEmailNotification(
+            email,
+            `[SNT Data Assembly] ${title}`,
+            `New message from ${currentUser}:\n\n${plainDescription}\n\n${fileName ? 'Attachment: ' + fileName : ''}\n\nPlease log in to SNT Data Assembly to view and reply.`
+          );
+        });
+        
+        if (recipients.length > 0) {
+          showNotification(`Email sent to ${recipients.length} recipient(s)!`, 'info');
+        }
+      }
+      
+      setTimeout(() => {
+        hideLoading();
+        closeAddModal();
+        renderTabs();
+        loadSection(currentSectionIndex);
+        showNotification(editingItem ? 'Updated!' : 'Added!', 'success');
+      }, 500);
+    }
+
+    // ==================== PREVIEW MODAL ====================
+    function openPreview(i, focusComments = false) {
+      const item = currentItems[i];
+      if (!item) return;
+      previewItem = item;
+      
+      document.getElementById('previewTitle').textContent = item.title;
+      document.getElementById('previewOpenBtn').style.display = item.fileUrl ? 'flex' : 'none';
+      document.getElementById('previewDownloadBtn').style.display = item.fileUrl ? 'flex' : 'none';
+      
+      // Build preview content
+      let html = '<div class="preview-info">';
+      html += `<h4>${item.title}</h4>`;
+      html += `<p><strong>Date:</strong> ${formatDate(item.date)}</p>`;
+      
+      if (item.section === 'nextstep') {
+        html += `<p><strong>Status:</strong> <span class="status-badge ${getStatusClass(item)}">${getStatusLabel(item)}</span></p>`;
+        if (item.dueDate) html += `<p><strong>Due:</strong> ${formatDate(item.dueDate)}</p>`;
+        if (item.assignee) html += `<p><strong>Assigned to:</strong> ${item.assignee}${item.assigneeEmail ? ` (${item.assigneeEmail})` : ''}</p>`;
+      }
+      
+      if (item.description) {
+        html += `<p><strong>Description:</strong></p><div class="description-box">${item.description}</div>`;
+      }
+      
+      // Completion details
+      if (item.status === 'completed' && item.completionNotes) {
+        html += `
+          <div class="completion-box">
+            <h5>${icons.check} Completion Details</h5>
+            <p><strong>Completed:</strong> ${formatDate(item.completionDate)}${item.completedBy ? ' by ' + item.completedBy : ''}</p>
+            <p><strong>Notes:</strong></p>
+            <div class="notes-box">${item.completionNotes}</div>
+            ${item.evidenceUrl ? `<p style="margin-top:8px;"><a href="${item.evidenceUrl}" target="_blank" style="color:var(--success);">View Evidence</a></p>` : ''}
+          </div>
+        `;
+      }
+      
+      // File preview
+      if (item.fileUrl) {
+        html += `<div style="margin-top:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <strong>Attached File: ${item.fileName || 'File'}</strong>
+            <button class="btn btn-success" onclick="downloadPreviewFile()" style="padding:6px 12px;font-size:0.8rem;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download
+            </button>
+          </div>
+          <iframe src="${item.fileUrl}" style="width:100%;height:400px;border:1px solid var(--gray-200);border-radius:8px;"></iframe>
+        </div>`;
+      }
+      
+      html += '</div>';
+      document.getElementById('previewContainer').innerHTML = html;
+      
+      // Build comments section
+      renderComments();
+      
+      document.getElementById('previewModal').classList.add('active');
+      
+      if (focusComments) {
+        setTimeout(() => document.getElementById('newCommentText')?.focus(), 300);
+      }
+    }
+
+    function renderComments() {
+      if (!previewItem) return;
+      const comments = previewItem.comments || [];
+      
+      let html = `
+        <div class="comments-header">
+          <h5>${icons.comment} Comments (${comments.length})</h5>
+        </div>
+        <div class="comments-list" id="commentsList">
+      `;
+      
+      comments.forEach((c, idx) => {
+        const roleClass = c.role || 'user';
+        const canReply = c.author !== currentUser; // Can't reply to yourself
+        const canEdit = c.author === currentUser; // Can only edit your own comments
+        const reactions = c.reactions || {};
+        const reactionEmojis = ['👍', '❤️', '😊', '🎉', '👀', '🔥'];
+        
+        html += `
+          <div class="comment-item ${roleClass}">
+            <div class="comment-header">
+              <span class="comment-author">${c.author} <span class="role-tag ${roleClass}">${roleClass}</span></span>
+              <span class="comment-time">${formatDateTime(c.time)}${c.edited ? ' (edited)' : ''}</span>
+            </div>
+            <div class="comment-text" id="commentText-${idx}">${c.text}</div>
+            ${c.attachment ? `
+              <div class="comment-attachment">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                <span>${c.attachmentName}</span>
+                <a href="${c.attachment}" download="${c.attachmentName}" class="download-link">Download</a>
+              </div>
+            ` : ''}
+            <div class="comment-reactions">
+              <div class="reactions-display">
+                ${reactionEmojis.map(emoji => {
+                  const count = reactions[emoji] ? reactions[emoji].length : 0;
+                  const hasReacted = reactions[emoji] && reactions[emoji].includes(currentUser);
+                  return count > 0 ? `<span class="reaction-badge ${hasReacted ? 'reacted' : ''}" onclick="toggleReaction(${idx}, '${emoji}')">${emoji} ${count}</span>` : '';
+                }).join('')}
+              </div>
+              <div class="reactions-picker">
+                <button class="add-reaction-btn" onclick="toggleReactionPicker(${idx})">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                </button>
+                <div class="reaction-picker-popup" id="reactionPicker-${idx}">
+                  ${reactionEmojis.map(emoji => `<span class="reaction-option" onclick="toggleReaction(${idx}, '${emoji}')">${emoji}</span>`).join('')}
+                </div>
+              </div>
+            </div>
+            <div class="comment-actions">
+              ${canReply ? `<button class="comment-reply-btn" onclick="startReply(${idx})">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+                Reply
+              </button>` : ''}
+              ${canEdit ? `<button class="comment-edit-btn" onclick="startEditComment(${idx})">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>` : ''}
+            </div>
+            ${c.replies && c.replies.length > 0 ? `
+              <div class="comment-replies">
+                ${c.replies.map((r, rIdx) => {
+                  const canEditReply = r.author === currentUser;
+                  const replyReactions = r.reactions || {};
+                  return `
+                  <div class="reply-item">
+                    <div class="comment-header">
+                      <span class="comment-author">${r.author} <span class="role-tag ${r.role || 'user'}">${r.role || 'user'}</span></span>
+                      <span class="comment-time">${formatDateTime(r.time)}${r.edited ? ' (edited)' : ''}</span>
+                    </div>
+                    <div class="comment-text" id="replyText-${idx}-${rIdx}">${r.text}</div>
+                    ${r.attachment ? `
+                      <div class="comment-attachment">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                        <span>${r.attachmentName}</span>
+                        <a href="${r.attachment}" download="${r.attachmentName}" class="download-link">Download</a>
+                      </div>
+                    ` : ''}
+                    <div class="comment-reactions" style="margin-top:6px;">
+                      <div class="reactions-display">
+                        ${reactionEmojis.map(emoji => {
+                          const count = replyReactions[emoji] ? replyReactions[emoji].length : 0;
+                          const hasReacted = replyReactions[emoji] && replyReactions[emoji].includes(currentUser);
+                          return count > 0 ? `<span class="reaction-badge ${hasReacted ? 'reacted' : ''}" onclick="toggleReplyReaction(${idx}, ${rIdx}, '${emoji}')">${emoji} ${count}</span>` : '';
+                        }).join('')}
+                      </div>
+                      <div class="reactions-picker">
+                        <button class="add-reaction-btn" onclick="toggleReplyReactionPicker(${idx}, ${rIdx})">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                        </button>
+                        <div class="reaction-picker-popup" id="replyReactionPicker-${idx}-${rIdx}">
+                          ${reactionEmojis.map(emoji => `<span class="reaction-option" onclick="toggleReplyReaction(${idx}, ${rIdx}, '${emoji}')">${emoji}</span>`).join('')}
+                        </div>
+                      </div>
+                    </div>
+                    ${canEditReply ? `<button class="comment-edit-btn" onclick="startEditReply(${idx}, ${rIdx})" style="margin-top:4px;">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      Edit
+                    </button>` : ''}
+                  </div>
+                `}).join('')}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
+      
+      html += '</div>';
+      
+      // Reply box (shown when replying)
+      html += `<div id="replyBox" style="display:none;margin-bottom:12px;padding:12px;background:#e0e7ff;border-radius:8px;">
+        <p style="font-size:0.85rem;margin-bottom:8px;font-weight:600;color:#3730a3;">Replying to comment...</p>
+        <div class="mini-toolbar" style="margin-bottom:6px;">
+          <button type="button" onclick="formatReplyText('bold')" title="Bold"><strong>B</strong></button>
+          <button type="button" onclick="formatReplyText('italic')" title="Italic"><em>I</em></button>
+          <button type="button" onclick="formatReplyText('underline')" title="Underline"><u>U</u></button>
+        </div>
+        <div class="comment-file-upload" style="margin-bottom:8px;">
+          <button type="button" class="comment-file-btn" onclick="document.getElementById('replyFileInput').click()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            Attach File
+          </button>
+          <input type="file" id="replyFileInput" style="display:none" onchange="handleReplyFileSelect(this)">
+          <span class="comment-file-name" id="replyFileName"></span>
+          <button type="button" class="comment-file-remove" id="replyFileRemove" style="display:none" onclick="removeReplyFile()">✕ Remove</button>
+        </div>
+        <div class="comment-editor" id="replyText" contenteditable="true" placeholder="Write your reply..." style="background:white;"></div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="btn btn-purple" onclick="submitReply()" style="padding:8px 14px;font-size:0.8rem;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Send Reply
+          </button>
+          <button class="btn btn-outline" onclick="cancelReply()" style="padding:8px 14px;font-size:0.8rem;color:#333;border-color:#ccc;">Cancel</button>
+        </div>
+      </div>`;
+      
+      // Add comment box with mini formatting toolbar
+      html += `
+        <div class="add-comment-box-container">
+          <div class="mini-toolbar">
+            <button type="button" onclick="formatCommentText('bold')" title="Bold"><strong>B</strong></button>
+            <button type="button" onclick="formatCommentText('italic')" title="Italic"><em>I</em></button>
+            <button type="button" onclick="formatCommentText('underline')" title="Underline"><u>U</u></button>
+            <button type="button" onclick="insertCommentLink()" title="Link">🔗</button>
+          </div>
+          <div class="comment-file-upload">
+            <button type="button" class="comment-file-btn" onclick="document.getElementById('commentFileInput').click()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              Attach File
+            </button>
+            <input type="file" id="commentFileInput" style="display:none" onchange="handleCommentFileSelect(this)">
+            <span class="comment-file-name" id="commentFileName"></span>
+            <button type="button" class="comment-file-remove" id="commentFileRemove" style="display:none" onclick="removeCommentFile()">✕ Remove</button>
+          </div>
+          <div class="add-comment-box">
+            <div class="comment-editor" id="newCommentText" contenteditable="true" placeholder="Add a comment..."></div>
+            <button class="btn btn-purple" onclick="addComment()" style="padding:10px 16px;white-space:nowrap;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              Send
+            </button>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('commentsSection').innerHTML = html;
+    }
+
+    // Comment file handling
+    let commentFile = null;
+    let replyFile = null;
+
+    function handleCommentFileSelect(input) {
+      const file = input.files ? input.files[0] : null;
+      if (file) {
+        commentFile = file;
+        document.getElementById('commentFileName').textContent = file.name;
+        document.getElementById('commentFileRemove').style.display = 'inline';
+      }
+    }
+
+    function removeCommentFile() {
+      commentFile = null;
+      document.getElementById('commentFileInput').value = '';
+      document.getElementById('commentFileName').textContent = '';
+      document.getElementById('commentFileRemove').style.display = 'none';
+    }
+
+    function handleReplyFileSelect(input) {
+      const file = input.files ? input.files[0] : null;
+      if (file) {
+        replyFile = file;
+        document.getElementById('replyFileName').textContent = file.name;
+        document.getElementById('replyFileRemove').style.display = 'inline';
+      }
+    }
+
+    function removeReplyFile() {
+      replyFile = null;
+      document.getElementById('replyFileInput').value = '';
+      document.getElementById('replyFileName').textContent = '';
+      document.getElementById('replyFileRemove').style.display = 'none';
+    }
+
+    // Reaction functions
+    function toggleReactionPicker(idx) {
+      const picker = document.getElementById(`reactionPicker-${idx}`);
+      // Close all other pickers first
+      document.querySelectorAll('.reaction-picker-popup').forEach(p => {
+        if (p.id !== `reactionPicker-${idx}`) p.classList.remove('show');
+      });
+      picker.classList.toggle('show');
+    }
+
+    function toggleReplyReactionPicker(commentIdx, replyIdx) {
+      const picker = document.getElementById(`replyReactionPicker-${commentIdx}-${replyIdx}`);
+      document.querySelectorAll('.reaction-picker-popup').forEach(p => {
+        if (p.id !== `replyReactionPicker-${commentIdx}-${replyIdx}`) p.classList.remove('show');
+      });
+      picker.classList.toggle('show');
+    }
+
+    function toggleReaction(commentIdx, emoji) {
+      if (!previewItem || !previewItem.comments[commentIdx]) return;
+      
+      const comment = previewItem.comments[commentIdx];
+      if (!comment.reactions) comment.reactions = {};
+      if (!comment.reactions[emoji]) comment.reactions[emoji] = [];
+      
+      const idx = comment.reactions[emoji].indexOf(currentUser);
+      if (idx === -1) {
+        comment.reactions[emoji].push(currentUser);
+      } else {
+        comment.reactions[emoji].splice(idx, 1);
+      }
+      
+      // Update in sections
+      sections.forEach(s => {
+        if (s.items) {
+          const item = s.items.find(i => i.id === previewItem.id);
+          if (item) item.comments = previewItem.comments;
+        }
+      });
+      
+      saveToStorage();
+      renderComments();
+    }
+
+    function toggleReplyReaction(commentIdx, replyIdx, emoji) {
+      if (!previewItem || !previewItem.comments[commentIdx]?.replies?.[replyIdx]) return;
+      
+      const reply = previewItem.comments[commentIdx].replies[replyIdx];
+      if (!reply.reactions) reply.reactions = {};
+      if (!reply.reactions[emoji]) reply.reactions[emoji] = [];
+      
+      const idx = reply.reactions[emoji].indexOf(currentUser);
+      if (idx === -1) {
+        reply.reactions[emoji].push(currentUser);
+      } else {
+        reply.reactions[emoji].splice(idx, 1);
+      }
+      
+      // Update in sections
+      sections.forEach(s => {
+        if (s.items) {
+          const item = s.items.find(i => i.id === previewItem.id);
+          if (item) item.comments = previewItem.comments;
+        }
+      });
+      
+      saveToStorage();
+      renderComments();
+    }
+
+    function formatCommentText(command) {
+      document.execCommand(command, false, null);
+      document.getElementById('newCommentText').focus();
+    }
+
+    function insertCommentLink() {
+      const url = prompt('Enter URL:');
+      if (url) {
+        document.execCommand('createLink', false, url);
+      }
+      document.getElementById('newCommentText').focus();
+    }
+
+    function addComment() {
+      const textEl = document.getElementById('newCommentText');
+      const text = textEl.innerHTML.trim();
+      if ((!text || text === '<br>') && !commentFile) {
+        showNotification('Please add a comment or attach a file', 'error');
+        return;
+      }
+      if (!previewItem) return;
+      
+      // Handle file attachment
+      let attachment = null;
+      let attachmentName = null;
+      if (commentFile) {
+        attachment = URL.createObjectURL(commentFile);
+        attachmentName = commentFile.name;
+      }
+      
+      if (!previewItem.comments) previewItem.comments = [];
+      previewItem.comments.push({
+        id: 'c-' + Date.now(),
+        author: currentUser,
+        role: userRole,
+        text: text || '',
+        time: new Date().toISOString(),
+        replies: [],
+        attachment: attachment,
+        attachmentName: attachmentName,
+        reactions: {}
+      });
+      
+      // Update in sections
+      sections.forEach(s => {
+        if (s.items) {
+          const item = s.items.find(i => i.id === previewItem.id);
+          if (item) item.comments = previewItem.comments;
+        }
+      });
+      
+      saveToStorage();
+      
+      // Send notification to assignee for tasks
+      if (previewItem.section === 'nextstep' && previewItem.assigneeEmail && userRole !== 'user') {
+        sendEmailNotification(
+          previewItem.assigneeEmail,
+          `New Comment on: ${previewItem.title}`,
+          `${currentUser} commented:\n\n"${stripHtml(text)}"\n${attachmentName ? '\nAttachment: ' + attachmentName : ''}\n\nTask: ${previewItem.title}\n\nPlease log in to SNT Data Assembly to view and reply.`
+        );
+      }
+      
+      // Send notification to all platform users for email threads
+      if (previewItem.section === 'email') {
+        platformUsers.forEach(u => {
+          if (u.name !== currentUser) {
+            sendEmailNotification(
+              u.email,
+              `Re: ${previewItem.title}`,
+              `${currentUser} replied:\n\n"${stripHtml(text)}"\n${attachmentName ? '\nAttachment: ' + attachmentName : ''}\n\nPlease log in to SNT Data Assembly to view and reply.`
+            );
+          }
+        });
+      }
+      
+      textEl.innerHTML = '';
+      removeCommentFile();
+      renderComments();
+      renderItems();
+      showNotification('Comment added!', 'success');
+    }
+
+    function startReply(commentIdx) {
+      replyingTo = commentIdx;
+      document.getElementById('replyBox').style.display = 'block';
+      document.getElementById('replyText').focus();
+    }
+
+    function cancelReply() {
+      replyingTo = null;
+      replyFile = null;
+      document.getElementById('replyBox').style.display = 'none';
+      document.getElementById('replyText').innerHTML = '';
+    }
+
+    function formatReplyText(command) {
+      document.execCommand(command, false, null);
+      document.getElementById('replyText').focus();
+    }
+
+    function submitReply() {
+      const textEl = document.getElementById('replyText');
+      const text = textEl.innerHTML.trim();
+      if ((!text || text === '<br>') && !replyFile) {
+        showNotification('Please add a reply or attach a file', 'error');
+        return;
+      }
+      if (replyingTo === null || !previewItem) return;
+      
+      // Handle file attachment
+      let attachment = null;
+      let attachmentName = null;
+      if (replyFile) {
+        attachment = URL.createObjectURL(replyFile);
+        attachmentName = replyFile.name;
+      }
+      
+      if (!previewItem.comments[replyingTo].replies) {
+        previewItem.comments[replyingTo].replies = [];
+      }
+      
+      previewItem.comments[replyingTo].replies.push({
+        author: currentUser,
+        role: userRole,
+        text: text || '',
+        time: new Date().toISOString(),
+        attachment: attachment,
+        attachmentName: attachmentName,
+        reactions: {}
+      });
+      
+      // Update in sections
+      sections.forEach(s => {
+        if (s.items) {
+          const item = s.items.find(i => i.id === previewItem.id);
+          if (item) item.comments = previewItem.comments;
+        }
+      });
+      
+      // Send notification to all platform users for email threads
+      if (previewItem.section === 'email') {
+        platformUsers.forEach(u => {
+          if (u.name !== currentUser) {
+            sendEmailNotification(
+              u.email,
+              `Re: ${previewItem.title}`,
+              `${currentUser} replied:\n\n"${stripHtml(text)}"\n${attachmentName ? '\nAttachment: ' + attachmentName : ''}\n\nPlease log in to SNT Data Assembly to view and reply.`
+            );
+          }
+        });
+      }
+      
+      saveToStorage();
+      removeReplyFile();
+      cancelReply();
+      renderComments();
+      showNotification('Reply added!', 'success');
+    }
+
+    let editingCommentIdx = null;
+    let editingReplyIdx = null;
+
+    function startEditComment(idx) {
+      const comment = previewItem.comments[idx];
+      if (!comment || comment.author !== currentUser) return;
+      
+      editingCommentIdx = idx;
+      editingReplyIdx = null;
+      
+      const textEl = document.getElementById(`commentText-${idx}`);
+      if (textEl) {
+        textEl.innerHTML = `
+          <div class="mini-toolbar" style="margin-bottom:6px;">
+            <button type="button" onclick="document.execCommand('bold')" title="Bold"><strong>B</strong></button>
+            <button type="button" onclick="document.execCommand('italic')" title="Italic"><em>I</em></button>
+            <button type="button" onclick="document.execCommand('underline')" title="Underline"><u>U</u></button>
+          </div>
+          <div class="comment-editor" id="editCommentText" contenteditable="true" style="background:white;min-height:50px;border:2px solid var(--info);">${comment.text}</div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="btn btn-info" onclick="saveEditComment()" style="padding:6px 12px;font-size:0.75rem;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Save
+            </button>
+            <button class="btn btn-outline" onclick="cancelEditComment()" style="padding:6px 12px;font-size:0.75rem;color:#333;border-color:#ccc;">Cancel</button>
+          </div>
+        `;
+      }
+    }
+
+    function saveEditComment() {
+      if (editingCommentIdx === null || !previewItem) return;
+      
+      const newText = document.getElementById('editCommentText').innerHTML.trim();
+      if (!newText || newText === '<br>') {
+        showNotification('Comment cannot be empty', 'error');
+        return;
+      }
+      
+      previewItem.comments[editingCommentIdx].text = newText;
+      previewItem.comments[editingCommentIdx].edited = true;
+      previewItem.comments[editingCommentIdx].editedAt = new Date().toISOString();
+      
+      // Update in sections
+      sections.forEach(s => {
+        if (s.items) {
+          const item = s.items.find(i => i.id === previewItem.id);
+          if (item) item.comments = previewItem.comments;
+        }
+      });
+      
+      saveToStorage();
+      editingCommentIdx = null;
+      renderComments();
+      showNotification('Comment updated!', 'success');
+    }
+
+    function cancelEditComment() {
+      editingCommentIdx = null;
+      renderComments();
+    }
+
+    function startEditReply(commentIdx, replyIdx) {
+      const reply = previewItem.comments[commentIdx]?.replies?.[replyIdx];
+      if (!reply || reply.author !== currentUser) return;
+      
+      editingCommentIdx = commentIdx;
+      editingReplyIdx = replyIdx;
+      
+      const textEl = document.getElementById(`replyText-${commentIdx}-${replyIdx}`);
+      if (textEl) {
+        textEl.innerHTML = `
+          <div class="mini-toolbar" style="margin-bottom:6px;">
+            <button type="button" onclick="document.execCommand('bold')" title="Bold"><strong>B</strong></button>
+            <button type="button" onclick="document.execCommand('italic')" title="Italic"><em>I</em></button>
+            <button type="button" onclick="document.execCommand('underline')" title="Underline"><u>U</u></button>
+          </div>
+          <div class="comment-editor" id="editReplyText" contenteditable="true" style="background:white;min-height:50px;border:2px solid var(--info);">${reply.text}</div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="btn btn-info" onclick="saveEditReply()" style="padding:6px 12px;font-size:0.75rem;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Save
+            </button>
+            <button class="btn btn-outline" onclick="cancelEditReply()" style="padding:6px 12px;font-size:0.75rem;color:#333;border-color:#ccc;">Cancel</button>
+          </div>
+        `;
+      }
+    }
+
+    function saveEditReply() {
+      if (editingCommentIdx === null || editingReplyIdx === null || !previewItem) return;
+      
+      const newText = document.getElementById('editReplyText').innerHTML.trim();
+      if (!newText || newText === '<br>') {
+        showNotification('Reply cannot be empty', 'error');
+        return;
+      }
+      
+      previewItem.comments[editingCommentIdx].replies[editingReplyIdx].text = newText;
+      previewItem.comments[editingCommentIdx].replies[editingReplyIdx].edited = true;
+      previewItem.comments[editingCommentIdx].replies[editingReplyIdx].editedAt = new Date().toISOString();
+      
+      // Update in sections
+      sections.forEach(s => {
+        if (s.items) {
+          const item = s.items.find(i => i.id === previewItem.id);
+          if (item) item.comments = previewItem.comments;
+        }
+      });
+      
+      saveToStorage();
+      editingCommentIdx = null;
+      editingReplyIdx = null;
+      renderComments();
+      showNotification('Reply updated!', 'success');
+    }
+
+    function cancelEditReply() {
+      editingCommentIdx = null;
+      editingReplyIdx = null;
+      renderComments();
+    }
+
+    function closePreviewModal() {
+      document.getElementById('previewModal').classList.remove('active');
+      previewItem = null;
+      replyingTo = null;
+    }
+
+    function openPreviewFile() {
+      if (previewItem?.fileUrl) {
+        const id = extractGoogleDriveId(previewItem.fileUrl);
+        window.open(id ? `https://drive.google.com/file/d/${id}/view` : previewItem.fileUrl, '_blank');
+      }
+    }
+
+    function downloadFile(i) {
+      const item = currentItems[i];
+      if (!item || !item.fileUrl) return;
+      
+      // For Google Drive files
+      const id = extractGoogleDriveId(item.fileUrl);
+      if (id) {
+        // Open Google Drive download link
+        window.open(`https://drive.google.com/uc?export=download&id=${id}`, '_blank');
+      } else if (item.fileUrl.startsWith('blob:')) {
+        // For locally uploaded files (blob URLs)
+        const a = document.createElement('a');
+        a.href = item.fileUrl;
+        a.download = item.fileName || 'download';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        // For other URLs, try to open/download
+        window.open(item.fileUrl, '_blank');
+      }
+      
+      showNotification('Download started!', 'success');
+    }
+
+    function downloadPreviewFile() {
+      if (!previewItem || !previewItem.fileUrl) return;
+      
+      const id = extractGoogleDriveId(previewItem.fileUrl);
+      if (id) {
+        window.open(`https://drive.google.com/uc?export=download&id=${id}`, '_blank');
+      } else if (previewItem.fileUrl.startsWith('blob:')) {
+        const a = document.createElement('a');
+        a.href = previewItem.fileUrl;
+        a.download = previewItem.fileName || 'download';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        window.open(previewItem.fileUrl, '_blank');
+      }
+      
+      showNotification('Download started!', 'success');
+    }
+
+    function openPdfInNewTab() {
+      if (!previewItem || !previewItem.fileUrl) return;
+      window.open(previewItem.fileUrl, '_blank');
+    }
+
+    // ==================== COMPLETE MODAL ====================
+    function openCompleteModal(i) {
+      if (userRole !== 'supervisor' && userRole !== 'admin') return;
+      const item = currentItems[i];
+      if (!item || item.status === 'completed') return;
+      
+      itemToComplete = item;
+      document.getElementById('completeTaskInfo').innerHTML = `
+        <h4 style="font-size:1rem;margin-bottom:6px;">${item.title}</h4>
+        <p style="font-size:0.85rem;color:var(--gray-600);">${item.dueDate ? 'Due: ' + formatDate(item.dueDate) : 'No due date'}${item.assignee ? ' | Assigned: ' + item.assignee : ''}</p>
+      `;
+      document.getElementById('completionNotes').value = '';
+      document.getElementById('completionFileUrl').value = '';
+      document.getElementById('completionDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('completeModal').classList.add('active');
+    }
+
+    function closeCompleteModal() {
+      document.getElementById('completeModal').classList.remove('active');
+      itemToComplete = null;
+    }
+
+    function confirmComplete() {
+      if (!itemToComplete) return;
+      const notes = document.getElementById('completionNotes').value.trim();
+      const evidenceUrl = document.getElementById('completionFileUrl').value.trim();
+      const completionDate = document.getElementById('completionDate').value;
+      
+      if (!notes) { showNotification('Enter completion notes', 'error'); return; }
+      
+      showLoading('Completing...');
+      
+      sections.forEach(s => {
+        if (s.items) {
+          const item = s.items.find(i => i.id === itemToComplete.id);
+          if (item) {
+            item.status = 'completed';
+            item.completionNotes = notes;
+            item.completionDate = completionDate || new Date().toISOString().split('T')[0];
+            item.completedBy = currentUser;
+            if (evidenceUrl) item.evidenceUrl = evidenceUrl;
+          }
+        }
+      });
+      
+      saveToStorage();
+      
+      // Notify assignee
+      if (itemToComplete.assigneeEmail) {
+        sendEmailNotification(
+          itemToComplete.assigneeEmail,
+          `Task Completed: ${itemToComplete.title}`,
+          `Your task has been marked as complete by ${currentUser}.\n\nTask: ${itemToComplete.title}\nCompletion Notes: ${notes}\n\nPlease log in to SNT Data Assembly for details.`
+        );
+      }
+      
+      setTimeout(() => {
+        hideLoading();
+        closeCompleteModal();
+        renderTabs();
+        loadSection(currentSectionIndex);
+        showNotification('Task completed!', 'success');
+      }, 500);
+    }
+
+    // ==================== DELETE MODAL ====================
+    function openDeleteModal(i) {
+      if (userRole !== 'admin') return;
+      const item = currentItems[i];
+      if (!item) return;
+      itemToDelete = item;
+      document.getElementById('deleteItemTitle').textContent = item.title;
+      document.getElementById('deleteModal').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').classList.remove('active');
+      itemToDelete = null;
+    }
+
+    function confirmDelete() {
+      if (!itemToDelete || userRole !== 'admin') return;
+      sections.forEach(s => {
+        if (s.items) {
+          const idx = s.items.findIndex(i => i.id === itemToDelete.id);
+          if (idx !== -1) s.items.splice(idx, 1);
+        }
+      });
+      saveToStorage();
+      closeDeleteModal();
+      renderTabs();
+      loadSection(currentSectionIndex);
+      showNotification('Deleted!', 'success');
+    }
+
+    // ==================== UTILITIES ====================
+    function showLoading(t) {
+      document.getElementById('loadingText').textContent = t;
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+    function showNotification(msg, type = 'info') {
+      const n = document.getElementById('notification');
+      n.textContent = msg;
+      n.className = `notification ${type} show`;
+      setTimeout(() => n.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>
