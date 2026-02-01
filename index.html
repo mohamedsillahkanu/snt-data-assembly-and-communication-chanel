@@ -427,11 +427,21 @@
     <main class="main">
       <!-- Google Script Settings (Admin only) -->
       <div class="settings-panel" id="settingsPanel" style="display:none;">
-        <h4><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Google Apps Script URL</h4>
-        <p>Enter your deployed Google Apps Script Web App URL for email notifications and Drive backup</p>
-        <input type="text" id="scriptUrl" placeholder="https://script.google.com/macros/s/..." value="">
-        <button class="btn btn-gold" onclick="saveScriptUrl()">Save URL</button>
-        <button class="btn btn-info" onclick="testConnection()">Test Connection</button>
+        <div style="display:flex;align-items:flex-start;gap:15px;">
+          <div style="background:#004080;color:white;padding:12px;border-radius:8px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+          <div style="flex:1;">
+            <h4 style="margin:0 0 5px;color:#004080;">Google Apps Script Integration</h4>
+            <p style="margin:0 0 12px;color:#666;font-size:0.9rem;">Enter your deployed Google Apps Script URL to enable email notifications and Google Drive backup</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <input type="text" id="scriptUrl" placeholder="Paste your Google Apps Script URL here..." value="" style="flex:1;min-width:300px;">
+              <button class="btn btn-gold" onclick="saveScriptUrl()">Save URL</button>
+              <button class="btn btn-info" onclick="testConnection()">Test Connection</button>
+            </div>
+            <p style="margin:8px 0 0;color:#888;font-size:0.8rem;">URL format: https://script.google.com/macros/s/XXXXXXX/exec</p>
+          </div>
+        </div>
       </div>
 
       <div class="section-nav">
@@ -546,14 +556,25 @@
           </div>
         </div>
         <div class="form-group">
-          <label>Upload File</label>
-          <div class="file-upload-zone" id="fileUploadZone" onclick="document.getElementById('fileInput').click()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:36px;height:36px;stroke:#666;margin-bottom:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <p style="margin:0;color:#333;font-weight:600;">Click to upload or drag & drop</p>
-            <p style="margin:4px 0 0;color:#666;font-size:0.8rem;">PDF, Excel, Word, PowerPoint</p>
-            <p class="file-name-display" id="fileNameDisplay" style="margin-top:8px;color:var(--primary);font-weight:600;"></p>
+          <label>Attach File or Link</label>
+          <div style="display:flex;gap:10px;margin-bottom:10px;">
+            <button type="button" class="btn btn-outline" id="uploadTabBtn" onclick="showUploadTab('upload')" style="flex:1;padding:8px;background:#004080;color:white;border-color:#004080;">Upload File</button>
+            <button type="button" class="btn btn-outline" id="linkTabBtn" onclick="showUploadTab('link')" style="flex:1;padding:8px;">Paste Link</button>
           </div>
-          <input type="file" id="fileInput" accept=".pdf,.xlsx,.xls,.docx,.doc,.pptx,.ppt" style="display:none" onchange="handleFileSelect(this)">
+          <div id="uploadTabContent">
+            <div class="file-upload-zone" id="fileUploadZone" onclick="document.getElementById('fileInput').click()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:36px;height:36px;stroke:#666;margin-bottom:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <p style="margin:0;color:#333;font-weight:600;">Click to upload or drag & drop</p>
+              <p style="margin:4px 0 0;color:#666;font-size:0.8rem;">PDF, Excel, Word, PowerPoint</p>
+              <p class="file-name-display" id="fileNameDisplay" style="margin-top:8px;color:var(--primary);font-weight:600;"></p>
+            </div>
+            <input type="file" id="fileInput" accept=".pdf,.xlsx,.xls,.docx,.doc,.pptx,.ppt" style="display:none" onchange="handleFileSelect(this)">
+          </div>
+          <div id="linkTabContent" style="display:none;">
+            <input type="text" id="externalLinkUrl" placeholder="Paste Google Docs, Sheets, Drive, or any URL..." style="margin-bottom:8px;">
+            <input type="text" id="externalLinkName" placeholder="Link name (optional, e.g. 'Q3 Report Spreadsheet')">
+            <div class="form-hint" style="margin-top:8px;">Supported: Google Docs, Sheets, Slides, Drive files, Dropbox, OneDrive, or any web link</div>
+          </div>
         </div>
         <div class="form-group">
           <label>File Type</label>
@@ -694,7 +715,6 @@
     let previewItem = null;
     let editingItem = null;
     let replyingTo = null;
-    let selectedFile = null;
 
     // ==================== STORAGE ====================
     // Platform users for email notifications
@@ -765,6 +785,24 @@
         });
       } catch (e) {
         console.log('Email error:', e);
+      }
+    }
+
+    // Send notification to ALL platform users via Google Apps Script
+    async function sendNotificationToAll(action, data) {
+      const scriptUrl = getScriptUrl();
+      if (!scriptUrl) return;
+      
+      try {
+        await fetch(scriptUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: action, ...data })
+        });
+        console.log('Notification sent:', action);
+      } catch (e) {
+        console.log('Notification error:', e);
       }
     }
 
@@ -906,7 +944,19 @@
     }
 
     function getFileTypeLabel(t) {
-      return { pdf: 'PDF', excel: 'Excel', word: 'Word', ppt: 'PPT' }[t] || 'File';
+      return { 
+        pdf: 'PDF', 
+        excel: 'Excel', 
+        word: 'Word', 
+        ppt: 'PPT',
+        'google-doc': 'Google Doc',
+        'google-sheet': 'Google Sheet',
+        'google-slides': 'Google Slides',
+        'google-drive': 'Google Drive',
+        'dropbox': 'Dropbox',
+        'onedrive': 'OneDrive',
+        'link': 'Link'
+      }[t] || 'File';
     }
 
     function detectFileType(url) {
@@ -1012,6 +1062,9 @@
     }
 
     // ==================== FILE HANDLING ====================
+    let selectedFile = null;
+    let selectedFileData = null; // Store base64 data
+
     function handleFileSelect(input) {
       const file = input.files ? input.files[0] : null;
       if (file) {
@@ -1028,6 +1081,14 @@
         
         if (validTypes.includes(file.type) || validExtensions.test(file.name)) {
           selectedFile = file;
+          
+          // Convert to base64 for persistence
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            selectedFileData = e.target.result; // This is a data URL (base64)
+          };
+          reader.readAsDataURL(file);
+          
           document.getElementById('fileNameDisplay').textContent = file.name;
           document.getElementById('fileUploadZone').classList.add('has-file');
           showNotification('File selected: ' + file.name, 'success');
@@ -1040,9 +1101,78 @@
 
     function clearFileSelection() {
       selectedFile = null;
+      selectedFileData = null;
       document.getElementById('fileInput').value = '';
       document.getElementById('fileNameDisplay').textContent = '';
       document.getElementById('fileUploadZone').classList.remove('has-file');
+    }
+
+    function showUploadTab(tab) {
+      const uploadBtn = document.getElementById('uploadTabBtn');
+      const linkBtn = document.getElementById('linkTabBtn');
+      const uploadContent = document.getElementById('uploadTabContent');
+      const linkContent = document.getElementById('linkTabContent');
+      
+      if (tab === 'upload') {
+        uploadBtn.style.background = '#004080';
+        uploadBtn.style.color = 'white';
+        uploadBtn.style.borderColor = '#004080';
+        linkBtn.style.background = 'white';
+        linkBtn.style.color = '#333';
+        linkBtn.style.borderColor = '#ccc';
+        uploadContent.style.display = 'block';
+        linkContent.style.display = 'none';
+        // Clear link inputs when switching to upload
+        document.getElementById('externalLinkUrl').value = '';
+        document.getElementById('externalLinkName').value = '';
+      } else {
+        linkBtn.style.background = '#004080';
+        linkBtn.style.color = 'white';
+        linkBtn.style.borderColor = '#004080';
+        uploadBtn.style.background = 'white';
+        uploadBtn.style.color = '#333';
+        uploadBtn.style.borderColor = '#ccc';
+        uploadContent.style.display = 'none';
+        linkContent.style.display = 'block';
+        // Clear file selection when switching to link
+        clearFileSelection();
+      }
+    }
+
+    function getExternalLinkType(url) {
+      if (!url) return 'link';
+      url = url.toLowerCase();
+      if (url.includes('docs.google.com/document')) return 'google-doc';
+      if (url.includes('docs.google.com/spreadsheets')) return 'google-sheet';
+      if (url.includes('docs.google.com/presentation')) return 'google-slides';
+      if (url.includes('drive.google.com')) return 'google-drive';
+      if (url.includes('dropbox.com')) return 'dropbox';
+      if (url.includes('onedrive.live.com') || url.includes('sharepoint.com')) return 'onedrive';
+      if (url.includes('.pdf')) return 'pdf';
+      if (url.includes('.xlsx') || url.includes('.xls')) return 'excel';
+      if (url.includes('.docx') || url.includes('.doc')) return 'word';
+      if (url.includes('.pptx') || url.includes('.ppt')) return 'ppt';
+      return 'link';
+    }
+
+    function getLinkDisplayName(url) {
+      if (!url) return 'External Link';
+      if (url.includes('docs.google.com/document')) return 'Google Doc';
+      if (url.includes('docs.google.com/spreadsheets')) return 'Google Sheet';
+      if (url.includes('docs.google.com/presentation')) return 'Google Slides';
+      if (url.includes('drive.google.com')) return 'Google Drive File';
+      if (url.includes('dropbox.com')) return 'Dropbox File';
+      if (url.includes('onedrive.live.com') || url.includes('sharepoint.com')) return 'OneDrive File';
+      // Try to get filename from URL
+      try {
+        const urlObj = new URL(url);
+        const path = urlObj.pathname;
+        const filename = path.split('/').pop();
+        if (filename && filename.length > 0 && filename.includes('.')) {
+          return decodeURIComponent(filename);
+        }
+      } catch (e) {}
+      return 'External Link';
     }
 
     // ==================== RICH TEXT EDITOR ====================
@@ -1108,6 +1238,10 @@
       if (document.getElementById('notifyAll')) document.getElementById('notifyAll').checked = true;
       if (document.getElementById('additionalEmails')) document.getElementById('additionalEmails').value = '';
       clearFileSelection();
+      // Reset upload/link tabs
+      showUploadTab('upload');
+      if (document.getElementById('externalLinkUrl')) document.getElementById('externalLinkUrl').value = '';
+      if (document.getElementById('externalLinkName')) document.getElementById('externalLinkName').value = '';
       updateFormFields();
       document.getElementById('addModal').classList.add('active');
     }
@@ -1148,10 +1282,33 @@
       document.getElementById('itemFileUrl').value = item.fileUrl || '';
       document.getElementById('itemFileType').value = item.fileType || '';
       clearFileSelection();
-      if (item.fileName) {
-        document.getElementById('fileNameDisplay').textContent = item.fileName + ' (existing)';
-        document.getElementById('fileUploadZone').classList.add('has-file');
+      
+      // Check if existing file is an external link or uploaded file
+      if (item.fileUrl) {
+        const isExternalLink = item.fileUrl.startsWith('http://') || item.fileUrl.startsWith('https://');
+        const isBase64 = item.fileUrl.startsWith('data:');
+        
+        if (isExternalLink && !isBase64) {
+          // It's an external link - show in link tab
+          showUploadTab('link');
+          document.getElementById('externalLinkUrl').value = item.fileUrl;
+          document.getElementById('externalLinkName').value = item.fileName || '';
+        } else {
+          // It's an uploaded file - show in upload tab
+          showUploadTab('upload');
+          document.getElementById('externalLinkUrl').value = '';
+          document.getElementById('externalLinkName').value = '';
+          if (item.fileName) {
+            document.getElementById('fileNameDisplay').textContent = item.fileName + ' (existing)';
+            document.getElementById('fileUploadZone').classList.add('has-file');
+          }
+        }
+      } else {
+        showUploadTab('upload');
+        document.getElementById('externalLinkUrl').value = '';
+        document.getElementById('externalLinkName').value = '';
       }
+      
       updateFormFields();
       document.getElementById('addModal').classList.add('active');
     }
@@ -1160,6 +1317,10 @@
       document.getElementById('addModal').classList.remove('active');
       editingItem = null;
       selectedFile = null;
+      selectedFileData = null;
+      // Clear link fields
+      if (document.getElementById('externalLinkUrl')) document.getElementById('externalLinkUrl').value = '';
+      if (document.getElementById('externalLinkName')) document.getElementById('externalLinkName').value = '';
     }
 
     // Initialize drag and drop
@@ -1234,12 +1395,24 @@
         return;
       }
       
-      // Handle uploaded file
-      if (selectedFile) {
-        fileUrl = URL.createObjectURL(selectedFile);
+      // Handle uploaded file - use base64 data URL for persistence
+      if (selectedFile && selectedFileData) {
+        fileUrl = selectedFileData; // Use base64 data URL
         fileName = selectedFile.name;
         fileType = detectFileType(selectedFile.name);
-      } else if (fileUrl && !fileType) {
+      } 
+      // Handle external link (Google Docs, Sheets, etc.)
+      else {
+        const externalUrl = document.getElementById('externalLinkUrl')?.value.trim();
+        const externalName = document.getElementById('externalLinkName')?.value.trim();
+        if (externalUrl) {
+          fileUrl = externalUrl;
+          fileName = externalName || getLinkDisplayName(externalUrl);
+          fileType = getExternalLinkType(externalUrl);
+        }
+      }
+      
+      if (fileUrl && !fileType) {
         fileType = detectFileType(fileUrl);
       }
       
@@ -1277,42 +1450,28 @@
       
       saveToStorage();
       
-      // Send email notification if new task assigned
-      if (isNew && sectionId === 'nextstep' && assigneeEmail) {
-        sendEmailNotification(
-          assigneeEmail,
-          `New Task Assigned: ${title}`,
-          `You have been assigned a new task:\n\nTitle: ${title}\nDue Date: ${dueDate || 'Not set'}\nDescription: ${stripHtml(description)}\n\nPlease log in to SNT Data Assembly to view details.`
-        );
-      }
-      
-      // Send email notification to all platform users when email is posted
-      if (isNew && sectionId === 'email') {
-        const notifyAll = document.getElementById('notifyAll')?.checked;
-        const additionalEmails = document.getElementById('additionalEmails')?.value.trim();
+      // Send notification to ALL users for any new item
+      if (isNew) {
+        const sectionName = sections.find(s => s.id === sectionId)?.name || sectionId;
         
-        // Collect all recipients
-        let recipients = [];
-        if (notifyAll) {
-          recipients = platformUsers.map(u => u.email).filter(e => e);
-        }
-        if (additionalEmails) {
-          const extras = additionalEmails.split(',').map(e => e.trim()).filter(e => e);
-          recipients = [...recipients, ...extras];
-        }
-        
-        // Send to each recipient
-        const plainDescription = stripHtml(description);
-        recipients.forEach(email => {
-          sendEmailNotification(
-            email,
-            `[SNT Data Assembly] ${title}`,
-            `New message from ${currentUser}:\n\n${plainDescription}\n\n${fileName ? 'Attachment: ' + fileName : ''}\n\nPlease log in to SNT Data Assembly to view and reply.`
-          );
-        });
-        
-        if (recipients.length > 0) {
-          showNotification(`Email sent to ${recipients.length} recipient(s)!`, 'info');
+        if (sectionId === 'nextstep') {
+          // Task assigned notification
+          sendNotificationToAll('taskAssigned', {
+            taskTitle: title,
+            assignee: assignee || 'Unassigned',
+            dueDate: dueDate || 'Not set',
+            assignedBy: currentUser,
+            description: stripHtml(description)
+          });
+        } else {
+          // General new item notification
+          sendNotificationToAll('newItem', {
+            itemTitle: title,
+            section: sectionName,
+            addedBy: currentUser,
+            description: stripHtml(description),
+            hasAttachment: !!fileName
+          });
         }
       }
       
@@ -1365,16 +1524,51 @@
       
       // File preview
       if (item.fileUrl) {
+        const isExternalLink = (item.fileUrl.startsWith('http://') || item.fileUrl.startsWith('https://')) && !item.fileUrl.startsWith('data:');
+        const linkType = getExternalLinkType(item.fileUrl);
+        
         html += `<div style="margin-top:16px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <strong>Attached File: ${item.fileName || 'File'}</strong>
-            <button class="btn btn-success" onclick="downloadPreviewFile()" style="padding:6px 12px;font-size:0.8rem;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download
-            </button>
-          </div>
-          <iframe src="${item.fileUrl}" style="width:100%;height:400px;border:1px solid var(--gray-200);border-radius:8px;"></iframe>
-        </div>`;
+            <strong>${isExternalLink ? 'Linked File' : 'Attached File'}: ${item.fileName || 'File'}</strong>
+            <div style="display:flex;gap:8px;">
+              ${isExternalLink ? `
+                <button class="btn btn-info" onclick="window.open('${item.fileUrl}', '_blank')" style="padding:6px 12px;font-size:0.8rem;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  Open Link
+                </button>
+              ` : `
+                <button class="btn btn-success" onclick="downloadPreviewFile()" style="padding:6px 12px;font-size:0.8rem;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Download
+                </button>
+              `}
+            </div>
+          </div>`;
+        
+        // Show preview/iframe for uploaded files, show link box for external links
+        if (isExternalLink) {
+          const iconMap = {
+            'google-doc': '<svg width="40" height="40" viewBox="0 0 24 24" fill="#4285F4"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg>',
+            'google-sheet': '<svg width="40" height="40" viewBox="0 0 24 24" fill="#0F9D58"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/><path d="M8 12h8v2H8v-2zm0 4h8v2H8v-2z"/></svg>',
+            'google-slides': '<svg width="40" height="40" viewBox="0 0 24 24" fill="#F4B400"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg>',
+            'google-drive': '<svg width="40" height="40" viewBox="0 0 24 24"><path fill="#4285F4" d="M12 10L6 2h12z"/><path fill="#FBBC05" d="M6 2l6 8-6 8H2z"/><path fill="#34A853" d="M18 2l-6 8 6 8h4z"/></svg>',
+            'dropbox': '<svg width="40" height="40" viewBox="0 0 24 24" fill="#0061FF"><path d="M12 6.5l-6-4-6 4 6 4 6-4zm0 0l6-4 6 4-6 4-6-4zm-6 8l6 4 6-4-6-4-6 4zm12 0l6-4v4l-6 4-6-4v-4l6 4z"/></svg>',
+            'onedrive': '<svg width="40" height="40" viewBox="0 0 24 24" fill="#0078D4"><path d="M12 4C7.58 4 4 7.58 4 12s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8z"/></svg>',
+            'link': '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>'
+          };
+          const icon = iconMap[linkType] || iconMap['link'];
+          
+          html += `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;border:2px dashed var(--gray-300);border-radius:12px;background:#f9f9f9;cursor:pointer;" onclick="window.open('${item.fileUrl}', '_blank')">
+              ${icon}
+              <p style="margin:15px 0 5px;font-weight:600;color:#333;">${item.fileName || 'External Link'}</p>
+              <p style="margin:0;font-size:0.85rem;color:#666;">Click to open in new tab</p>
+            </div>`;
+        } else {
+          html += `<iframe src="${item.fileUrl}" style="width:100%;height:400px;border:1px solid var(--gray-200);border-radius:8px;"></iframe>`;
+        }
+        
+        html += `</div>`;
       }
       
       html += '</div>';
@@ -1559,12 +1753,19 @@
 
     // Comment file handling
     let commentFile = null;
+    let commentFileData = null;
     let replyFile = null;
+    let replyFileData = null;
 
     function handleCommentFileSelect(input) {
       const file = input.files ? input.files[0] : null;
       if (file) {
         commentFile = file;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          commentFileData = e.target.result;
+        };
+        reader.readAsDataURL(file);
         document.getElementById('commentFileName').textContent = file.name;
         document.getElementById('commentFileRemove').style.display = 'inline';
       }
@@ -1572,6 +1773,7 @@
 
     function removeCommentFile() {
       commentFile = null;
+      commentFileData = null;
       document.getElementById('commentFileInput').value = '';
       document.getElementById('commentFileName').textContent = '';
       document.getElementById('commentFileRemove').style.display = 'none';
@@ -1581,6 +1783,11 @@
       const file = input.files ? input.files[0] : null;
       if (file) {
         replyFile = file;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          replyFileData = e.target.result;
+        };
+        reader.readAsDataURL(file);
         document.getElementById('replyFileName').textContent = file.name;
         document.getElementById('replyFileRemove').style.display = 'inline';
       }
@@ -1588,6 +1795,7 @@
 
     function removeReplyFile() {
       replyFile = null;
+      replyFileData = null;
       document.getElementById('replyFileInput').value = '';
       document.getElementById('replyFileName').textContent = '';
       document.getElementById('replyFileRemove').style.display = 'none';
@@ -1685,11 +1893,11 @@
       }
       if (!previewItem) return;
       
-      // Handle file attachment
+      // Handle file attachment - use base64 data URL
       let attachment = null;
       let attachmentName = null;
-      if (commentFile) {
-        attachment = URL.createObjectURL(commentFile);
+      if (commentFile && commentFileData) {
+        attachment = commentFileData;
         attachmentName = commentFile.name;
       }
       
@@ -1716,27 +1924,14 @@
       
       saveToStorage();
       
-      // Send notification to assignee for tasks
-      if (previewItem.section === 'nextstep' && previewItem.assigneeEmail && userRole !== 'user') {
-        sendEmailNotification(
-          previewItem.assigneeEmail,
-          `New Comment on: ${previewItem.title}`,
-          `${currentUser} commented:\n\n"${stripHtml(text)}"\n${attachmentName ? '\nAttachment: ' + attachmentName : ''}\n\nTask: ${previewItem.title}\n\nPlease log in to SNT Data Assembly to view and reply.`
-        );
-      }
-      
-      // Send notification to all platform users for email threads
-      if (previewItem.section === 'email') {
-        platformUsers.forEach(u => {
-          if (u.name !== currentUser) {
-            sendEmailNotification(
-              u.email,
-              `Re: ${previewItem.title}`,
-              `${currentUser} replied:\n\n"${stripHtml(text)}"\n${attachmentName ? '\nAttachment: ' + attachmentName : ''}\n\nPlease log in to SNT Data Assembly to view and reply.`
-            );
-          }
-        });
-      }
+      // Send notification to ALL users for any comment
+      sendNotificationToAll('newComment', {
+        itemTitle: previewItem.title,
+        itemSection: previewItem.section,
+        commenter: currentUser,
+        commentText: stripHtml(text),
+        hasAttachment: !!attachmentName
+      });
       
       textEl.innerHTML = '';
       removeCommentFile();
@@ -1754,6 +1949,7 @@
     function cancelReply() {
       replyingTo = null;
       replyFile = null;
+      replyFileData = null;
       document.getElementById('replyBox').style.display = 'none';
       document.getElementById('replyText').innerHTML = '';
     }
@@ -1772,11 +1968,11 @@
       }
       if (replyingTo === null || !previewItem) return;
       
-      // Handle file attachment
+      // Handle file attachment - use base64 data URL
       let attachment = null;
       let attachmentName = null;
-      if (replyFile) {
-        attachment = URL.createObjectURL(replyFile);
+      if (replyFile && replyFileData) {
+        attachment = replyFileData;
         attachmentName = replyFile.name;
       }
       
@@ -1802,18 +1998,13 @@
         }
       });
       
-      // Send notification to all platform users for email threads
-      if (previewItem.section === 'email') {
-        platformUsers.forEach(u => {
-          if (u.name !== currentUser) {
-            sendEmailNotification(
-              u.email,
-              `Re: ${previewItem.title}`,
-              `${currentUser} replied:\n\n"${stripHtml(text)}"\n${attachmentName ? '\nAttachment: ' + attachmentName : ''}\n\nPlease log in to SNT Data Assembly to view and reply.`
-            );
-          }
-        });
-      }
+      // Send notification to ALL platform users for any reply
+      sendNotificationToAll('newReply', {
+        itemTitle: previewItem.title,
+        replier: currentUser,
+        replyText: stripHtml(text),
+        hasAttachment: !!attachmentName
+      });
       
       saveToStorage();
       removeReplyFile();
@@ -1952,10 +2143,28 @@
     }
 
     function openPreviewFile() {
-      if (previewItem?.fileUrl) {
-        const id = extractGoogleDriveId(previewItem.fileUrl);
-        window.open(id ? `https://drive.google.com/file/d/${id}/view` : previewItem.fileUrl, '_blank');
+      if (!previewItem || !previewItem.fileUrl) {
+        showNotification('No file to open', 'error');
+        return;
       }
+      
+      const fileUrl = previewItem.fileUrl;
+      
+      // For Google Drive files
+      const id = extractGoogleDriveId(fileUrl);
+      if (id) {
+        window.open(`https://drive.google.com/file/d/${id}/view`, '_blank');
+        return;
+      }
+      
+      // For base64 data URLs or blob URLs - open directly
+      if (fileUrl.startsWith('data:') || fileUrl.startsWith('blob:')) {
+        window.open(fileUrl, '_blank');
+        return;
+      }
+      
+      // For other URLs
+      window.open(fileUrl, '_blank');
     }
 
     function downloadFile(i) {
@@ -1965,10 +2174,9 @@
       // For Google Drive files
       const id = extractGoogleDriveId(item.fileUrl);
       if (id) {
-        // Open Google Drive download link
         window.open(`https://drive.google.com/uc?export=download&id=${id}`, '_blank');
-      } else if (item.fileUrl.startsWith('blob:')) {
-        // For locally uploaded files (blob URLs)
+      } else if (item.fileUrl.startsWith('data:') || item.fileUrl.startsWith('blob:')) {
+        // For base64 data URLs and blob URLs
         const a = document.createElement('a');
         a.href = item.fileUrl;
         a.download = item.fileName || 'download';
@@ -1976,7 +2184,6 @@
         a.click();
         document.body.removeChild(a);
       } else {
-        // For other URLs, try to open/download
         window.open(item.fileUrl, '_blank');
       }
       
@@ -1984,12 +2191,16 @@
     }
 
     function downloadPreviewFile() {
-      if (!previewItem || !previewItem.fileUrl) return;
+      if (!previewItem || !previewItem.fileUrl) {
+        showNotification('No file to download', 'error');
+        return;
+      }
       
       const id = extractGoogleDriveId(previewItem.fileUrl);
       if (id) {
         window.open(`https://drive.google.com/uc?export=download&id=${id}`, '_blank');
-      } else if (previewItem.fileUrl.startsWith('blob:')) {
+      } else if (previewItem.fileUrl.startsWith('data:') || previewItem.fileUrl.startsWith('blob:')) {
+        // For base64 data URLs and blob URLs
         const a = document.createElement('a');
         a.href = previewItem.fileUrl;
         a.download = previewItem.fileName || 'download';
@@ -2055,14 +2266,13 @@
       
       saveToStorage();
       
-      // Notify assignee
-      if (itemToComplete.assigneeEmail) {
-        sendEmailNotification(
-          itemToComplete.assigneeEmail,
-          `Task Completed: ${itemToComplete.title}`,
-          `Your task has been marked as complete by ${currentUser}.\n\nTask: ${itemToComplete.title}\nCompletion Notes: ${notes}\n\nPlease log in to SNT Data Assembly for details.`
-        );
-      }
+      // Notify ALL users about task completion
+      sendNotificationToAll('taskCompleted', {
+        taskTitle: itemToComplete.title,
+        completedBy: currentUser,
+        completionNotes: notes,
+        completionDate: completionDate || new Date().toISOString().split('T')[0]
+      });
       
       setTimeout(() => {
         hideLoading();
