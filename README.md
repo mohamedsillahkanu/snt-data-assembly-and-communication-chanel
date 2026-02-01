@@ -1,0 +1,1 @@
+# snt-data-assembly-and-communication-chanel
