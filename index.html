@@ -413,6 +413,10 @@
           <span id="userDisplay">User</span>
           <span class="role-label" id="roleDisplay">User</span>
         </div>
+        <button class="btn btn-info" onclick="manualSync()" title="Sync from cloud">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Sync
+        </button>
         <button class="btn btn-gold" id="addBtn" onclick="openAddModal()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add
@@ -703,9 +707,9 @@
     // ==================== STORAGE ====================
     // Platform users for email notifications
     const platformUsers = [
-      { name: 'Admin', email: 'sillahmohamedkanu@gmail.com', role: 'admin' },
-      { name: 'Supervisor', email: 'sillahmusakanu@gmail.com', role: 'supervisor' },
-      { name: 'User', email: 'sillahkanu@gwu.edu', role: 'user' }
+      { name: 'Admin', email: 'admin@example.com', role: 'admin' },
+      { name: 'Supervisor', email: 'supervisor@example.com', role: 'supervisor' },
+      { name: 'User', email: 'user@example.com', role: 'user' }
     ];
     
     function loadFromStorage() {
@@ -718,6 +722,60 @@
             section.items.push(item);
           }
         });
+      }
+    }
+
+    // Load data from Google Drive (for cross-PC sync)
+    async function loadFromGoogleDrive() {
+      const scriptUrl = getScriptUrl();
+      if (!scriptUrl) return false;
+      
+      try {
+        showLoading('Syncing data...');
+        const response = await fetch(scriptUrl + '?action=getData');
+        const result = await response.json();
+        
+        if (result.success && result.data && result.data.data) {
+          const cloudData = result.data.data;
+          
+          // Clear existing items
+          sections.forEach(s => {
+            if (s.items) s.items = [];
+          });
+          
+          // Load cloud data
+          cloudData.forEach(item => {
+            const section = sections.find(s => s.id === item.section);
+            if (section?.items && !section.items.find(i => i.id === item.id)) {
+              section.items.push(item);
+            }
+          });
+          
+          // Also save to localStorage for offline access
+          localStorage.setItem('sntDataV3', JSON.stringify(cloudData));
+          
+          hideLoading();
+          console.log('Data loaded from Google Drive:', cloudData.length, 'items');
+          return true;
+        }
+        hideLoading();
+        return false;
+      } catch (e) {
+        console.log('Could not load from Google Drive:', e);
+        hideLoading();
+        return false;
+      }
+    }
+
+    // Manual sync button function
+    async function manualSync() {
+      const loaded = await loadFromGoogleDrive();
+      if (loaded) {
+        renderTabs();
+        loadSection(currentSectionIndex);
+        showNotification('Synced from cloud!', 'success');
+      } else {
+        showNotification('Could not sync - using local data', 'info');
       }
     }
 
@@ -840,9 +898,19 @@
       // All users can add items
       document.getElementById('addBtn').style.display = 'flex';
       
-      loadFromStorage();
-      renderTabs();
-      loadSection(0);
+      // Try to load from Google Drive first (for cross-PC sync), fall back to localStorage
+      loadFromGoogleDrive().then(loaded => {
+        if (!loaded) {
+          // Fall back to localStorage if Google Drive fails
+          loadFromStorage();
+        }
+        renderTabs();
+        loadSection(0);
+      }).catch(() => {
+        loadFromStorage();
+        renderTabs();
+        loadSection(0);
+      });
     }
 
     function logout() {
