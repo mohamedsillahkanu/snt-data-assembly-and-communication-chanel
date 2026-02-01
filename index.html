@@ -425,24 +425,8 @@
     </header>
 
     <main class="main">
-      <!-- Google Script Settings (Admin only) -->
-      <div class="settings-panel" id="settingsPanel" style="display:none;">
-        <div style="display:flex;align-items:flex-start;gap:15px;">
-          <div style="background:#004080;color:white;padding:12px;border-radius:8px;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          </div>
-          <div style="flex:1;">
-            <h4 style="margin:0 0 5px;color:#004080;">Google Apps Script Integration</h4>
-            <p style="margin:0 0 12px;color:#666;font-size:0.9rem;">Enter your deployed Google Apps Script URL to enable email notifications and Google Drive backup</p>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;">
-              <input type="text" id="scriptUrl" placeholder="Paste your Google Apps Script URL here..." value="" style="flex:1;min-width:300px;">
-              <button class="btn btn-gold" onclick="saveScriptUrl()">Save URL</button>
-              <button class="btn btn-info" onclick="testConnection()">Test Connection</button>
-            </div>
-            <p style="margin:8px 0 0;color:#888;font-size:0.8rem;">URL format: https://script.google.com/macros/s/XXXXXXX/exec</p>
-          </div>
-        </div>
-      </div>
+      <!-- Google Apps Script URL is now hardcoded - no settings panel needed -->
+      <div id="settingsPanel" style="display:none;"></div>
 
       <div class="section-nav">
         <button class="section-nav-btn" onclick="prevSection()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></button>
@@ -745,13 +729,13 @@
     }
 
     function getScriptUrl() {
-      return localStorage.getItem('sntScriptUrl') || '';
+      // Hardcoded Google Apps Script URL
+      return 'https://script.google.com/macros/s/AKfycbxOagMeDuwnVg7xglYlFeMP5r4E7ns5cIQHmI8cOJovSG6WmpdhEXYLTg0xgh-G7kgo/exec';
     }
 
     function saveScriptUrl() {
-      const url = document.getElementById('scriptUrl').value.trim();
-      localStorage.setItem('sntScriptUrl', url);
-      showNotification('Script URL saved!', 'success');
+      // No longer needed - URL is hardcoded
+      showNotification('Script URL is already configured!', 'info');
     }
 
     // ==================== GOOGLE APPS SCRIPT INTEGRATION ====================
@@ -850,9 +834,8 @@
       const badge = document.getElementById('userBadge');
       badge.className = 'user-badge ' + userRole;
       
-      // Show settings panel for admin
-      document.getElementById('settingsPanel').style.display = userRole === 'admin' ? 'block' : 'none';
-      document.getElementById('scriptUrl').value = getScriptUrl();
+      // Settings panel no longer needed - URL is hardcoded
+      document.getElementById('settingsPanel').style.display = 'none';
       
       // All users can add items
       document.getElementById('addBtn').style.display = 'flex';
