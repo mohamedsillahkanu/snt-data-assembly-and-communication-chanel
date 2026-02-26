@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SNT Data Assembly and Communication Channel</title>
+  <title>SNT Data Assembly - Windows Explorer Style</title>
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+Pro:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -12,11 +12,12 @@
       --success:#28a745; --danger:#dc3545; --info:#17a2b8; --purple:#6f42c1;
       --gray-100:#f0f4f8; --gray-200:#e2e8f0; --gray-300:#cbd5e1;
       --gray-400:#94a3b8; --gray-600:#475569; --gray-800:#1e293b;
+      --explorer-bg:#202020; --explorer-sidebar:#252525; --explorer-item:#2d2d2d;
     }
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:'Source Sans Pro',Arial,sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);min-height:100vh;}
 
-    /* ── AUTH ─────────────────────────────── */
+    /* ── AUTH (same as before) ─────────────────────────────── */
     .auth-screen{position:fixed;inset:0;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px;}
     .auth-screen.hidden{display:none;}
     .auth-card{background:white;border-radius:16px;width:100%;max-width:440px;box-shadow:0 30px 90px rgba(0,0,0,0.6);overflow:hidden;}
@@ -35,8 +36,8 @@
     .auth-success.show{display:block;}
     .form-group{margin-bottom:14px;}
     .form-group label{display:block;font-weight:600;margin-bottom:5px;color:var(--gray-800);font-size:.85rem;}
-    .form-group input,.form-group select{width:100%;padding:11px 14px;border:2px solid var(--gray-200);border-radius:8px;font-size:.95rem;font-family:inherit;transition:border-color .2s;}
-    .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,64,128,.1);}
+    .form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 14px;border:2px solid var(--gray-200);border-radius:8px;font-size:.95rem;font-family:inherit;transition:border-color .2s;}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,64,128,.1);}
     .form-hint{font-size:.74rem;color:var(--gray-400);margin-top:4px;}
     .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
     .pw-wrap{position:relative;}
@@ -56,7 +57,7 @@
     .role-chip{display:inline-block;padding:1px 7px;border-radius:4px;font-size:.68rem;font-weight:700;margin-left:4px;}
     .role-chip.admin{background:#fef3c7;color:#92400e;}
 
-    /* ── APP ─────────────────────────────── */
+    /* ── APP with Windows Explorer style ─────────────────── */
     .app{display:none;}
     .app.active{display:block;}
     .header{background:var(--primary);padding:10px 25px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 20px rgba(0,0,0,.3);position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:12px;}
@@ -90,216 +91,101 @@
     .btn-danger:hover{background:#c82333;}
     .btn-purple{background:var(--purple);border-color:var(--purple);color:white;}
     .btn-purple:hover{background:#5a32a3;}
-    .main{padding:18px 25px;min-height:calc(100vh - 80px);}
 
-    /* breadcrumb */
-    .breadcrumb{display:flex;align-items:center;gap:6px;margin-bottom:15px;padding:8px 15px;background:rgba(0,64,128,.3);border-radius:8px;border:1px solid rgba(0,64,128,.5);color:white;font-size:.9rem;flex-wrap:wrap;}
-    .bc-item{display:flex;align-items:center;gap:4px;cursor:pointer;}
-    .bc-item:hover{color:var(--accent);}
-    .bc-sep{margin:0 4px;color:rgba(255,255,255,.4);}
+    /* Windows Explorer layout */
+    .explorer-container{display:flex;height:calc(100vh - 140px);margin-top:10px;background:var(--explorer-bg);border-radius:8px;overflow:hidden;border:1px solid #3a3a3a;}
+    .explorer-sidebar{width:280px;background:var(--explorer-sidebar);border-right:1px solid #3a3a3a;display:flex;flex-direction:column;}
+    .sidebar-header{padding:12px;color:white;font-weight:600;border-bottom:1px solid #3a3a3a;display:flex;align-items:center;gap:8px;}
+    .sidebar-header svg{width:16px;height:16px;}
+    .folder-tree{flex:1;overflow-y:auto;padding:8px;}
+    .tree-item{padding:6px 8px;margin:2px 0;border-radius:4px;color:#e0e0e0;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:.9rem;transition:all .2s;}
+    .tree-item:hover{background:#3a3a3a;}
+    .tree-item.selected{background:var(--primary);color:white;}
+    .tree-item svg{width:16px;height:16px;opacity:.8;}
+    .tree-children{margin-left:20px;}
+    .tree-arrow{width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;opacity:.6;}
+    .explorer-content{flex:1;display:flex;flex-direction:column;background:var(--explorer-bg);}
+    .explorer-toolbar{padding:8px 12px;background:#2a2a2a;border-bottom:1px solid #3a3a3a;display:flex;gap:8px;align-items:center;color:white;}
+    .toolbar-btn{background:transparent;border:none;color:#e0e0e0;padding:6px 10px;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:.85rem;}
+    .toolbar-btn:hover{background:#3a3a3a;}
+    .toolbar-btn svg{width:14px;height:14px;}
+    .explorer-path{background:#2a2a2a;padding:8px 12px;border-bottom:1px solid #3a3a3a;color:#e0e0e0;font-size:.9rem;display:flex;align-items:center;gap:6px;}
+    .path-item{display:flex;align-items:center;gap:3px;cursor:pointer;}
+    .path-item:hover{color:var(--accent);}
+    .path-sep{margin:0 5px;color:#666;}
+    .explorer-view{flex:1;overflow-y:auto;padding:12px;background:var(--explorer-bg);}
+    .items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
 
-    /* folder actions bar */
-    .folder-bar{display:flex;gap:8px;margin-bottom:18px;background:rgba(0,64,128,.3);padding:8px 12px;border-radius:8px;border:1px solid rgba(0,64,128,.5);flex-wrap:wrap;align-items:center;}
-    .folder-bar-path{display:flex;align-items:center;gap:6px;color:white;font-size:.85rem;flex:1;}
+    /* Folder card (Windows Explorer style) */
+    .folder-card{background:var(--explorer-item);border:1px solid #3a3a3a;border-radius:6px;overflow:hidden;cursor:pointer;transition:all .2s;}
+    .folder-card:hover{background:#353535;border-color:var(--accent);transform:translateY(-1px);}
+    .folder-card-header{padding:12px;display:flex;align-items:center;gap:10px;color:#e0e0e0;}
+    .folder-icon{width:40px;height:40px;background:rgba(255,193,7,.1);border:1px solid rgba(255,193,7,.2);border-radius:6px;display:flex;align-items:center;justify-content:center;}
+    .folder-icon svg{width:22px;height:22px;stroke:#ffc107;}
+    .folder-info{flex:1;min-width:0;}
+    .folder-name{font-weight:600;font-size:.95rem;color:white;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .folder-meta{font-size:.75rem;color:#999;}
+    .folder-actions{display:flex;border-top:1px solid #3a3a3a;}
+    .folder-action{flex:1;padding:8px;background:transparent;border:none;color:#999;cursor:pointer;font-size:.75rem;display:flex;align-items:center;justify-content:center;gap:4px;}
+    .folder-action:hover{background:#404040;color:white;}
 
-    /* section nav */
-    .sec-nav{display:flex;align-items:center;gap:8px;margin-bottom:18px;background:rgba(0,64,128,.3);padding:8px 12px;border-radius:8px;border:1px solid rgba(0,64,128,.5);}
-    .sec-nav-btn{width:32px;height:32px;border-radius:6px;background:var(--primary);border:2px solid var(--accent);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .sec-nav-btn:hover{background:var(--primary-light);}
-    .sec-nav-btn svg{width:14px;height:14px;}
-    .sec-tabs{display:flex;gap:5px;flex:1;overflow-x:auto;padding:4px 0;scrollbar-width:none;}
-    .sec-tabs::-webkit-scrollbar{display:none;}
-    .sec-tab{padding:6px 12px;background:rgba(255,255,255,.1);border:2px solid transparent;border-radius:6px;color:white;font-family:'Oswald',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px;transition:all .3s;}
-    .sec-tab:hover{background:rgba(255,255,255,.2);}
-    .sec-tab.active{background:var(--accent);color:#000;border-color:var(--accent);}
-    .sec-tab svg{width:12px;height:12px;}
-    .sec-tab.active svg{stroke:#000;}
-    .tab-count{background:rgba(0,0,0,.2);padding:1px 5px;border-radius:4px;font-size:.65rem;}
-    .sec-tab.active .tab-count{background:rgba(0,0,0,.15);}
-    .sec-header{background:var(--primary);color:white;padding:12px 18px;border-radius:8px;display:flex;align-items:center;gap:12px;margin-bottom:18px;}
-    .sec-icon{width:40px;height:40px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;}
-    .sec-icon svg{width:20px;height:20px;stroke:white;}
-    .sec-title{font-family:'Oswald',sans-serif;font-size:1.1rem;font-weight:700;text-transform:uppercase;}
-    .sec-sub{font-size:.8rem;opacity:.9;}
-
-    /* grid */
-    .items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
-
-    /* folder card */
-    .folder-card{background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .3s;backdrop-filter:blur(5px);}
-    .folder-card:hover{border-color:var(--accent);transform:translateY(-2px);background:rgba(255,255,255,.17);box-shadow:0 8px 28px rgba(0,0,0,.3);}
-    .folder-card-header{padding:16px;display:flex;align-items:center;gap:14px;color:white;}
-    .folder-icon{width:52px;height:52px;background:linear-gradient(135deg,rgba(255,193,7,.25),rgba(255,193,7,.08));border:2px solid rgba(255,193,7,.35);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .folder-icon svg{width:28px;height:28px;stroke:#ffc107;}
-    .folder-info{flex:1;}
-    .folder-name{font-weight:700;font-size:1.05rem;margin-bottom:3px;}
-    .folder-meta{font-size:.78rem;opacity:.75;display:flex;gap:10px;flex-wrap:wrap;}
-    .folder-desc{font-size:.8rem;opacity:.8;margin-top:4px;font-style:italic;}
-    .folder-actions-bar{border-top:1px solid rgba(255,255,255,.1);padding:8px 14px;display:flex;gap:8px;background:rgba(0,0,0,.1);}
-    .fmini-btn{padding:5px 10px;border-radius:6px;font-size:.72rem;font-weight:700;font-family:'Oswald',sans-serif;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .2s;}
-    .fmini-del{background:rgba(220,53,69,.2);color:#fca5a5;border:1px solid rgba(220,53,69,.3);}
-    .fmini-del:hover{background:rgba(220,53,69,.55);color:white;}
-
-    /* item card */
-    .item-card{background:white;border-radius:10px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.2);transition:transform .3s,box-shadow .3s;}
-    .item-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.25);}
-    .item-card.completed{opacity:.85;}
-    .item-card.completed .item-card-header{background:#d1fae5;}
-    .item-card.overdue .item-card-header{background:#fee2e2;}
-    .item-card-header{padding:14px 16px;display:flex;align-items:flex-start;gap:12px;background:var(--gray-100);}
-    .item-type-icon{width:48px;height:48px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0;}
-    .item-type-icon svg{width:22px;height:22px;}
-    .item-type-icon.pdf{background:linear-gradient(135deg,#e53935,#c62828);}
-    .item-type-icon.excel{background:linear-gradient(135deg,#43a047,#2e7d32);}
-    .item-type-icon.word{background:linear-gradient(135deg,#1e88e5,#1565c0);}
-    .item-type-icon.ppt{background:linear-gradient(135deg,#fb8c00,#ef6c00);}
-    .item-type-icon.email{background:linear-gradient(135deg,#5c6bc0,#3949ab);}
-    .item-type-icon.meeting{background:linear-gradient(135deg,#26a69a,#00897b);}
-    .item-type-icon.nextstep{background:linear-gradient(135deg,#ab47bc,#8e24aa);}
-    .item-type-icon.other,.item-type-icon.file{background:linear-gradient(135deg,#78909c,#546e7a);}
+    /* Item card (Windows Explorer style) */
+    .item-card{background:var(--explorer-item);border:1px solid #3a3a3a;border-radius:6px;overflow:hidden;transition:all .2s;position:relative;}
+    .item-card:hover{border-color:var(--accent);background:#353535;}
+    .item-card.dragging{opacity:.5;}
+    .item-card.completed{opacity:.7;}
+    .item-card-header{padding:12px;display:flex;align-items:center;gap:10px;}
+    .item-type-icon{width:32px;height:32px;border-radius:4px;display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0;}
+    .item-type-icon.pdf{background:#e53935;}
+    .item-type-icon.excel{background:#43a047;}
+    .item-type-icon.word{background:#1e88e5;}
+    .item-type-icon.ppt{background:#fb8c00;}
+    .item-type-icon.email{background:#5c6bc0;}
+    .item-type-icon.meeting{background:#26a69a;}
+    .item-type-icon.nextstep{background:#ab47bc;}
+    .item-type-icon svg{width:16px;height:16px;}
     .item-info{flex:1;min-width:0;}
-    .item-name{font-weight:700;font-size:.95rem;color:var(--gray-800);margin-bottom:4px;line-height:1.3;}
-    .item-card.completed .item-name{text-decoration:line-through;color:var(--gray-600);}
-    .item-meta{font-size:.75rem;color:var(--gray-600);display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-    .item-date{display:inline-flex;align-items:center;gap:3px;background:var(--primary);color:white;padding:2px 6px;border-radius:4px;font-weight:600;font-size:.7rem;}
-    .item-date svg{width:10px;height:10px;}
-    .item-card.overdue .item-date{background:var(--danger);}
-    .status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:.7rem;font-weight:600;}
-    .status-badge.pending{background:#fff3cd;color:#856404;}
-    .status-badge.in-progress{background:#cce5ff;color:#004085;}
-    .status-badge.completed{background:#d4edda;color:#155724;}
-    .status-badge.overdue{background:#f8d7da;color:#721c24;}
-    .item-card-body{padding:14px 16px;}
-    .item-desc{font-size:.85rem;color:var(--gray-600);line-height:1.5;margin-bottom:10px;max-height:50px;overflow:hidden;}
-    .item-assignee{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--gray-100);border-radius:6px;margin-bottom:10px;font-size:.8rem;}
-    .item-assignee svg{width:14px;height:14px;stroke:var(--gray-600);}
-    .assignee-name{font-weight:600;color:var(--gray-800);}
-    .assignee-email{color:var(--primary);font-size:.75rem;}
-    .comments-indicator{display:flex;align-items:center;gap:5px;font-size:.75rem;color:var(--gray-600);margin-bottom:10px;cursor:pointer;padding:5px 8px;background:#e0e7ff;border-radius:6px;transition:background .2s;}
-    .comments-indicator:hover{background:#c7d2fe;}
-    .comments-indicator svg{width:14px;height:14px;}
-    .comments-indicator .cnt{font-weight:700;color:var(--purple);}
-    .item-actions{display:flex;gap:6px;flex-wrap:wrap;}
-    .ibtn{flex:1;min-width:60px;padding:7px 10px;border-radius:6px;font-size:.75rem;font-weight:600;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:4px;font-family:inherit;transition:all .3s;}
-    .ibtn svg{width:13px;height:13px;}
-    .ibtn-view{background:var(--primary);color:white;}
-    .ibtn-view:hover{background:var(--primary-light);}
-    .ibtn-dl{background:var(--success);color:white;}
-    .ibtn-dl:hover{background:#218838;}
-    .ibtn-cmt{background:var(--purple);color:white;}
-    .ibtn-cmt:hover{background:#5a32a3;}
-    .ibtn-done{background:var(--success);color:white;}
-    .ibtn-done:hover{background:#218838;}
-    .ibtn-edit{background:var(--info);color:white;flex:0;min-width:auto;padding:7px 9px;}
-    .ibtn-edit:hover{background:#138496;}
-    .ibtn-del{background:var(--danger);color:white;flex:0;min-width:auto;padding:7px 9px;}
-    .ibtn-del:hover{background:#c82333;}
-    .ibtn-move{background:var(--purple);color:white;flex:0;min-width:auto;padding:7px 9px;}
-    .ibtn-move:hover{background:#5a32a3;}
-    .empty-state{text-align:center;padding:50px 25px;background:rgba(255,255,255,.05);border-radius:12px;border:2px dashed rgba(255,255,255,.2);}
-    .empty-icon{width:60px;height:60px;margin:0 auto 12px;background:rgba(255,255,255,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;}
-    .empty-icon svg{width:30px;height:30px;stroke:rgba(255,255,255,.5);}
-    .empty-state h3{font-family:'Oswald',sans-serif;font-size:1.2rem;color:white;margin-bottom:8px;}
-    .empty-state p{color:rgba(255,255,255,.6);margin-bottom:12px;font-size:.9rem;}
+    .item-name{font-weight:600;font-size:.9rem;color:white;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .item-meta{font-size:.7rem;color:#999;display:flex;gap:8px;}
+    .item-date{color:#bbb;}
+    .status-badge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:.65rem;font-weight:600;}
+    .status-badge.pending{background:#85640433;color:#ffc107;}
+    .status-badge.in-progress{background:#00408533;color:#1e88e5;}
+    .status-badge.completed{background:#15572433;color:#28a745;}
+    .status-badge.overdue{background:#721c2433;color:#dc3545;}
+    .item-body{padding:0 12px 12px 12px;}
+    .item-desc{font-size:.8rem;color:#999;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    .item-footer{display:flex;gap:4px;border-top:1px solid #3a3a3a;}
+    .item-btn{flex:1;padding:6px;background:transparent;border:none;color:#999;cursor:pointer;font-size:.7rem;display:flex;align-items:center;justify-content:center;gap:3px;}
+    .item-btn:hover{background:#404040;color:white;}
+    .item-btn svg{width:12px;height:12px;}
 
-    /* ── MODALS ────────────────────────────── */
-    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:400;display:none;align-items:center;justify-content:center;padding:15px;overflow-y:auto;}
+    .empty-state{text-align:center;padding:40px;color:#999;}
+    .empty-state svg{width:48px;height:48px;stroke:#666;margin-bottom:12px;}
+    .empty-state h3{font-family:'Oswald',sans-serif;font-size:1.1rem;color:#e0e0e0;margin-bottom:8px;}
+
+    /* Drag and drop styles */
+    .folder-card.drag-over,.item-card.drag-over{border:2px solid var(--accent);background:#2a2a2a;}
+    .drag-placeholder{height:60px;background:#2a2a2a;border:2px dashed var(--accent);border-radius:6px;margin:8px 0;}
+
+    /* Modals (dark theme) */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:400;display:none;align-items:center;justify-content:center;padding:15px;overflow-y:auto;}
     .modal-overlay.active{display:flex;}
-    .modal{background:white;border-radius:14px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 70px rgba(0,0,0,.5);}
-    .modal-header{color:white;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:14px 14px 0 0;position:sticky;top:0;z-index:10;}
-    .modal-header.blue{background:var(--primary);}
-    .modal-header.green{background:var(--success);}
-    .modal-header.purple{background:var(--purple);}
-    .modal-header.red{background:var(--danger);}
+    .modal{background:#2d2d2d;border-radius:8px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;border:1px solid #3a3a3a;}
+    .modal-header{color:white;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:8px 8px 0 0;background:var(--primary);}
     .modal-header h2{font-family:'Oswald',sans-serif;font-size:1.1rem;display:flex;align-items:center;gap:8px;}
-    .modal-close{background:transparent;border:none;color:white;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;}
+    .modal-close{background:transparent;border:none;color:white;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:4px;}
     .modal-close:hover{background:rgba(255,255,255,.2);}
-    .modal-body{padding:20px;}
-    .modal-footer{padding:14px 20px;border-top:1px solid var(--gray-200);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:white;border-radius:0 0 14px 14px;}
-    .modal .form-group input,.modal .form-group select,.modal .form-group textarea{width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:.9rem;}
-    .modal .form-group input:focus,.modal .form-group select:focus,.modal .form-group textarea:focus{border-color:var(--primary);outline:none;}
-    .modal .form-group textarea{resize:vertical;min-height:70px;}
-    .modal .form-group label{display:block;font-weight:600;margin-bottom:5px;color:var(--gray-800);font-size:.85rem;}
-    .modal .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .modal-body{padding:20px;color:#e0e0e0;}
+    .modal-body .form-group label{color:#e0e0e0;}
+    .modal-body input,.modal-body select,.modal-body textarea{background:#3a3a3a;border:2px solid #4a4a4a;color:#e0e0e0;}
+    .modal-body input:focus,.modal-body select:focus,.modal-body textarea:focus{border-color:var(--accent);}
+    .modal-footer{padding:14px 20px;border-top:1px solid #3a3a3a;display:flex;gap:8px;justify-content:flex-end;background:#2a2a2a;border-radius:0 0 8px 8px;}
 
-    /* folder modal specific */
-    .folder-modal-body{padding:22px;}
-    .folder-modal-icon{width:56px;height:56px;background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;border:2px solid #6ee7b7;}
-    .folder-modal-icon svg{width:30px;height:30px;stroke:#065f46;}
-    .folder-modal-footer{border-top:2px solid var(--gray-200);padding:14px 22px;display:flex;gap:8px;justify-content:flex-end;background:var(--gray-100);border-radius:0 0 14px 14px;}
+    .footer{background:var(--primary);color:white;padding:14px 30px;text-align:center;font-size:.8rem;position:fixed;bottom:0;width:100%;}
+    .footer p{margin:3px 0;opacity:.9;}
 
-    /* folder tree */
-    .folder-tree{max-height:260px;overflow-y:auto;border:2px solid var(--gray-200);border-radius:8px;padding:6px;background:var(--gray-100);}
-    .ftree-root{padding:8px 10px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:.88rem;border:2px dashed var(--gray-300);color:var(--gray-600);background:white;margin-bottom:4px;}
-    .ftree-root:hover,.ftree-root.sel{border-color:var(--purple);color:var(--purple);background:#e0e7ff;}
-    .ftree-item{padding:8px 10px;margin:2px 0;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:.88rem;}
-    .ftree-item:hover{background:white;}
-    .ftree-item.sel{background:#e0e7ff;border-left:3px solid var(--purple);font-weight:600;}
-    .ftree-item svg{width:15px;height:15px;stroke:var(--gray-600);flex-shrink:0;}
-
-    /* rich editor */
-    .rich-toolbar{display:flex;gap:4px;padding:8px;background:var(--gray-100);border:2px solid var(--gray-200);border-bottom:none;border-radius:6px 6px 0 0;flex-wrap:wrap;}
-    .rich-toolbar button{padding:5px 9px;background:white;border:1px solid var(--gray-300);border-radius:4px;cursor:pointer;font-size:.85rem;min-width:30px;transition:all .2s;}
-    .rich-toolbar button:hover{background:var(--primary);color:white;border-color:var(--primary);}
-    .rich-toolbar .sep{width:1px;background:var(--gray-300);margin:0 4px;}
-    .rich-content{min-height:120px;padding:12px;border:2px solid var(--gray-200);border-radius:0 0 6px 6px;font-family:inherit;font-size:.9rem;line-height:1.6;overflow-y:auto;max-height:300px;}
-    .rich-content:focus{outline:none;border-color:var(--primary);}
-
-    /* upload zone */
-    .upload-zone{border:2px dashed var(--gray-300);border-radius:8px;padding:24px 20px;text-align:center;cursor:pointer;transition:all .3s;background:var(--gray-100);}
-    .upload-zone:hover,.upload-zone.over{border-color:var(--primary);background:#e7f3ff;}
-    .upload-zone.has-file{border-color:var(--success);background:#e8f5e9;}
-
-    /* confirm modal */
-    .confirm-modal{max-width:400px;text-align:center;}
-    .confirm-header{color:white;padding:20px;border-radius:14px 14px 0 0;}
-    .confirm-header svg{width:40px;height:40px;margin-bottom:8px;}
-    .confirm-body{padding:20px;}
-    .confirm-body p{color:var(--gray-600);margin-bottom:8px;}
-    .confirm-title{font-weight:700;color:var(--gray-800);padding:10px;background:var(--gray-100);border-radius:6px;margin:12px 0;}
-    .confirm-footer{padding:14px;border-top:1px solid var(--gray-200);display:flex;gap:8px;justify-content:center;}
-
-    /* comments */
-    .comments-section{margin-top:20px;border-top:2px solid var(--gray-200);padding-top:16px;}
-    .comment-item{padding:12px;background:var(--gray-100);border-radius:8px;margin-bottom:10px;}
-    .comment-item.supervisor{background:#e0e7ff;border-left:3px solid var(--purple);}
-    .comment-item.admin{background:#fef3c7;border-left:3px solid var(--accent);}
-    .cmt-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
-    .cmt-author{font-weight:600;font-size:.85rem;color:var(--gray-800);display:flex;align-items:center;gap:5px;}
-    .cmt-author .role-tag{font-size:.65rem;padding:2px 6px;border-radius:4px;font-weight:600;}
-    .cmt-author .role-tag.admin{background:var(--accent);color:#000;}
-    .cmt-author .role-tag.supervisor{background:var(--purple);color:white;}
-    .cmt-author .role-tag.user{background:var(--success);color:white;}
-    .cmt-time{font-size:.7rem;color:var(--gray-400);}
-    .cmt-text{font-size:.85rem;color:var(--gray-600);line-height:1.5;}
-    .cmt-reply-btn,.cmt-edit-btn{font-size:.75rem;background:none;border:none;cursor:pointer;margin-top:6px;display:inline-flex;align-items:center;gap:4px;}
-    .cmt-reply-btn{color:var(--primary);}
-    .cmt-edit-btn{color:var(--info);margin-left:12px;}
-    .cmt-reply-btn:hover,.cmt-edit-btn:hover{text-decoration:underline;}
-    .cmt-replies{margin-left:20px;margin-top:10px;padding-left:10px;border-left:2px solid var(--gray-300);}
-    .reply-item{padding:8px 10px;background:white;border-radius:6px;margin-bottom:6px;}
-    .cmt-editor{padding:10px 12px;border:2px solid var(--gray-200);border-radius:6px;font-family:inherit;font-size:.85rem;min-height:60px;max-height:150px;overflow-y:auto;}
-    .cmt-editor:focus{border-color:var(--purple);outline:none;}
-    .cmt-editor:empty:before{content:attr(placeholder);color:var(--gray-400);}
-    .mini-bar{display:flex;gap:4px;margin-bottom:6px;}
-    .mini-bar button{padding:4px 8px;background:var(--gray-100);border:1px solid var(--gray-300);border-radius:4px;cursor:pointer;font-size:.8rem;}
-    .mini-bar button:hover{background:var(--purple);color:white;border-color:var(--purple);}
-    .cmt-add-row{display:flex;gap:8px;align-items:flex-end;margin-top:8px;}
-    .reactions-row{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;}
-    .react-badges{display:flex;gap:4px;flex-wrap:wrap;}
-    .react-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:12px;font-size:.8rem;cursor:pointer;}
-    .react-badge:hover{background:var(--gray-200);}
-    .react-badge.me{background:#e0e7ff;border-color:var(--purple);}
-    .react-picker-wrap{position:relative;}
-    .react-btn{padding:4px 8px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:6px;cursor:pointer;font-size:.75rem;color:var(--gray-600);}
-    .react-btn:hover{background:var(--gray-200);}
-    .react-popup{display:none;position:absolute;bottom:100%;left:0;background:white;border:1px solid var(--gray-200);border-radius:8px;padding:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:10;margin-bottom:4px;}
-    .react-popup.show{display:flex;gap:4px;}
-    .react-opt{font-size:1.2rem;cursor:pointer;padding:4px;border-radius:4px;}
-    .react-opt:hover{background:var(--gray-100);transform:scale(1.2);}
-
-    /* loading + notification */
-    .loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .3s;}
+    .loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .3s;}
     .loading-overlay.active{opacity:1;pointer-events:all;}
     .spinner{width:40px;height:40px;border:4px solid rgba(255,193,7,.3);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg);}}
@@ -308,1153 +194,714 @@
     .notif.show{opacity:1;transform:translateX(-50%) translateY(0);}
     .notif.success{background:#d4edda;color:#155724;}
     .notif.error{background:#f8d7da;color:#721c24;}
-    .notif.info{background:#e7f3ff;color:var(--primary);}
-
-    .footer{background:var(--primary);color:white;padding:14px 30px;text-align:center;font-size:.8rem;}
-    .footer p{margin:3px 0;opacity:.9;}
+    .notif.info{background:#2d2d2d;color:#e0e0e0;border:1px solid var(--accent);}
 
     @media(max-width:768px){
       .header{padding:8px 12px;}
-      .header-text p{display:none;}
-      .header-text h1{font-size:1rem;}
-      .search-wrap{order:3;flex:100%;max-width:100%;margin-top:6px;}
-      .main{padding:12px;}
+      .explorer-container{flex-direction:column;height:auto;}
+      .explorer-sidebar{width:100%;max-height:200px;}
       .items-grid{grid-template-columns:1fr;}
-      .form-row,.modal .form-row{grid-template-columns:1fr;}
-      .user-badge span:not(.role-label){display:none;}
-      .auth-form-row{grid-template-columns:1fr!important;}
     }
   </style>
 </head>
 <body>
 
-<!-- ══════════ AUTH SCREEN ══════════ -->
+<!-- ══════════ AUTH SCREEN ══════════ (same as before) -->
 <div class="auth-screen" id="authScreen">
   <div class="auth-card">
     <div class="auth-banner">
       <img src="https://github.com/mohamedsillahkanu/gdp-dashboard-2/raw/6c7463b0d5c3be150aafae695a4bcbbd8aeb1499/ICF-SL.jpg" alt="ICF-SL">
       <div class="auth-banner-text">
         <h1>SNT Data Assembly</h1>
-        <p>Centralized Data Management Platform</p>
+        <p>Windows Explorer Style</p>
       </div>
     </div>
-
     <div class="auth-tabs">
-      <div class="auth-tab active" id="tabIn" onclick="switchTab('in')">Sign In</div>
-      <div class="auth-tab" id="tabUp" onclick="switchTab('up')">Sign Up</div>
+      <div class="auth-tab active" onclick="switchTab('in')">Sign In</div>
+      <div class="auth-tab" onclick="switchTab('up')">Sign Up</div>
     </div>
-
-    <!-- SIGN IN -->
     <div class="auth-body" id="signInBody">
       <div class="auth-error" id="loginErr"></div>
       <form onsubmit="doLogin(event)">
         <div class="form-group">
           <label>Username or Email</label>
-          <input type="text" id="liUser" placeholder="Enter username or email" required autocomplete="username">
+          <input type="text" id="liUser" placeholder="Enter username or email" required>
         </div>
         <div class="form-group">
           <label>Password</label>
           <div class="pw-wrap">
-            <input type="password" id="liPw" placeholder="Enter password" required autocomplete="current-password">
+            <input type="password" id="liPw" placeholder="Enter password" required>
             <button type="button" class="pw-eye" onclick="togglePw('liPw',this)">👁</button>
           </div>
         </div>
-        <button type="submit" class="auth-btn primary" id="loginBtn">Sign In</button>
+        <button type="submit" class="auth-btn primary">Sign In</button>
       </form>
       <div class="admin-note">
-        <strong>Admin access:</strong> username <code>admin</code> <span class="role-chip admin">Admin</span><br>
-        <small>All other users must register via Sign Up.</small>
+        <strong>Admin:</strong> username <code>admin</code> <span class="role-chip admin">Admin</span>
       </div>
     </div>
-
-    <!-- SIGN UP -->
     <div class="auth-body" id="signUpBody" style="display:none;">
       <div class="auth-error" id="signupErr"></div>
-      <div class="auth-success" id="signupOk">Account created! You can now sign in.</div>
+      <div class="auth-success" id="signupOk"></div>
       <form onsubmit="doSignUp(event)">
-        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <div class="form-group">
-            <label>First Name *</label>
-            <input type="text" id="suFirst" placeholder="First name" required>
-          </div>
-          <div class="form-group">
-            <label>Last Name *</label>
-            <input type="text" id="suLast" placeholder="Last name" required>
-          </div>
+        <div class="form-row">
+          <div class="form-group"><label>First Name</label><input type="text" id="suFirst" required></div>
+          <div class="form-group"><label>Last Name</label><input type="text" id="suLast" required></div>
         </div>
-        <div class="form-group">
-          <label>Email *</label>
-          <input type="email" id="suEmail" placeholder="your@email.com" required>
-        </div>
-        <div class="form-group">
-          <label>Username *</label>
-          <input type="text" id="suUser" placeholder="Choose a username (no spaces)" required>
-        </div>
-        <div class="form-group">
-          <label>Role</label>
-          <select id="suRole">
-            <option value="user">User</option>
-            <option value="supervisor">Supervisor</option>
-          </select>
-          <div class="form-hint">Admin accounts are created by the system administrator only.</div>
-        </div>
-        <div class="form-group">
-          <label>Password * <small style="font-weight:400;color:var(--gray-400)">(min 8 chars)</small></label>
-          <div class="pw-wrap">
-            <input type="password" id="suPw" placeholder="Create password" required oninput="checkStrength(this.value)">
-            <button type="button" class="pw-eye" onclick="togglePw('suPw',this)">👁</button>
-          </div>
-          <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
-        </div>
-        <div class="form-group">
-          <label>Confirm Password *</label>
-          <div class="pw-wrap">
-            <input type="password" id="suConfirm" placeholder="Repeat password" required>
-            <button type="button" class="pw-eye" onclick="togglePw('suConfirm',this)">👁</button>
-          </div>
-        </div>
-        <button type="submit" class="auth-btn green" id="signupBtn">Create Account</button>
+        <div class="form-group"><label>Email</label><input type="email" id="suEmail" required></div>
+        <div class="form-group"><label>Username</label><input type="text" id="suUser" required></div>
+        <div class="form-group"><label>Role</label><select id="suRole"><option value="user">User</option><option value="supervisor">Supervisor</option></select></div>
+        <div class="form-group"><label>Password</label><div class="pw-wrap"><input type="password" id="suPw" required oninput="checkStrength(this.value)"><button type="button" class="pw-eye" onclick="togglePw('suPw',this)">👁</button></div><div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div></div>
+        <div class="form-group"><label>Confirm</label><div class="pw-wrap"><input type="password" id="suConfirm" required><button type="button" class="pw-eye" onclick="togglePw('suConfirm',this)">👁</button></div></div>
+        <button type="submit" class="auth-btn green">Create Account</button>
       </form>
     </div>
   </div>
 </div>
 
-<!-- ══════════ MAIN APP ══════════ -->
+<!-- ══════════ MAIN APP (Windows Explorer Style) ══════════ -->
 <div class="app" id="appContainer">
   <header class="header">
     <div class="header-brand">
-      <div class="logo-box">
-        <img src="https://github.com/mohamedsillahkanu/gdp-dashboard-2/raw/6c7463b0d5c3be150aafae695a4bcbbd8aeb1499/ICF-SL.jpg" alt="ICF-SL">
-      </div>
-      <div class="header-text">
-        <h1>DATA ASSEMBLY AND COMMUNICATION PLATFORM</h1>
-        <p>Centralized Data Management</p>
-      </div>
+      <div class="logo-box"><img src="https://github.com/mohamedsillahkanu/gdp-dashboard-2/raw/6c7463b0d5c3be150aafae695a4bcbbd8aeb1499/ICF-SL.jpg" alt="ICF-SL"></div>
+      <div class="header-text"><h1>SNT EXPLORER</h1><p>Windows Style Navigation</p></div>
     </div>
     <div class="search-wrap">
-      <input type="text" class="search-input" id="searchInput" placeholder="Search..." oninput="handleSearch(this.value)">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search folders & files..." oninput="handleSearch(this.value)">
       <button class="search-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></button>
     </div>
     <div class="hdr-actions">
       <div class="user-badge" id="userBadge">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <span id="userDisplay"></span>
-        <span class="role-label" id="roleDisplay"></span>
+        <span id="userDisplay"></span><span class="role-label" id="roleDisplay"></span>
       </div>
-      <button class="btn btn-info" onclick="manualSync()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Sync
-      </button>
-      <button class="btn btn-success" onclick="openFolderModal()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>New Folder
-      </button>
-      <button class="btn btn-gold" onclick="openAddModal()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add File
-      </button>
-      <button class="btn btn-outline" onclick="logout()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout
-      </button>
+      <button class="btn btn-info" onclick="manualSync()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Sync</button>
+      <button class="btn btn-success" onclick="openFolderModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>New Folder</button>
+      <button class="btn btn-gold" onclick="openAddModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add File</button>
+      <button class="btn btn-outline" onclick="logout()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</button>
     </div>
   </header>
 
-  <main class="main">
-    <div class="breadcrumb" id="breadcrumb"></div>
-    <div class="folder-bar" id="folderBar" style="display:none;">
-      <div class="folder-bar-path" id="folderBarPath"></div>
-      <button class="btn btn-outline" onclick="goUp()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Up
-      </button>
-      <button class="btn btn-outline" onclick="openFolderModal()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New Subfolder
-      </button>
+  <!-- Windows Explorer Layout -->
+  <div class="explorer-container">
+    <!-- Left Sidebar - Folder Tree -->
+    <div class="explorer-sidebar">
+      <div class="sidebar-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span>Folders</span>
+      </div>
+      <div class="folder-tree" id="folderTreeSidebar"></div>
     </div>
-    <div class="sec-nav">
-      <button class="sec-nav-btn" onclick="prevSec()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg></button>
-      <div class="sec-tabs" id="secTabs"></div>
-      <button class="sec-nav-btn" onclick="nextSec()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></button>
+
+    <!-- Right Content Area -->
+    <div class="explorer-content">
+      <!-- Toolbar -->
+      <div class="explorer-toolbar">
+        <button class="toolbar-btn" onclick="goUp()" id="goUpBtn" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Up
+        </button>
+        <button class="toolbar-btn" onclick="refreshCurrentFolder()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Refresh
+        </button>
+        <div style="flex:1;"></div>
+        <span id="itemCount" style="color:#999;font-size:.8rem;"></span>
+      </div>
+
+      <!-- Breadcrumb Path -->
+      <div class="explorer-path" id="breadcrumb"></div>
+
+      <!-- Items Grid (Windows Explorer view) -->
+      <div class="explorer-view" id="explorerView">
+        <div class="items-grid" id="itemsGrid"></div>
+      </div>
     </div>
-    <div class="sec-header">
-      <div class="sec-icon" id="secIcon"></div>
-      <div><div class="sec-title" id="secTitle">All Items</div><div class="sec-sub" id="secSub">Loading…</div></div>
-    </div>
-    <div class="items-grid" id="itemsGrid"></div>
-  </main>
+  </div>
 
   <footer class="footer">
-    <p><strong>Informatics Consultancy Firm – Sierra Leone (ICF-SL)</strong></p>
-    <p>Health Information Systems | Data Analytics | Digital Solutions</p>
+    <p><strong>ICF-SL</strong> · Windows Explorer Style File Management</p>
   </footer>
 </div>
 
-<!-- ══ ADD / EDIT ITEM MODAL ══ -->
-<div class="modal-overlay" id="addModal">
+<!-- Modals (Folder, Add, Move, etc.) -->
+<div class="modal-overlay" id="folderModal">
   <div class="modal">
-    <div class="modal-header blue"><h2 id="modalTitle">Add New File</h2><button class="modal-close" onclick="closeAddModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <div class="modal-header green"><h2>📁 New Folder</h2><button class="modal-close" onclick="closeFolderModal()">✕</button></div>
     <div class="modal-body">
-      <div class="form-group"><label>Title *</label><input type="text" id="itemTitle" placeholder="Enter title"></div>
-      <div class="modal .form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div class="form-group"><label>Section *</label>
-          <select id="itemSection" onchange="updateFields()">
-            <option value="routine-epi">Routine Epi Data</option>
-            <option value="routine-intervention">Routine Intervention</option>
-            <option value="routine-stockout">Routine Stockout</option>
-            <option value="campaign">Campaign Data</option>
-            <option value="other-dataset">Other Dataset</option>
-            <option value="report">Report</option>
-            <option value="output">Output Files</option>
-            <option value="email">Email</option>
-            <option value="meeting">Meeting Minutes</option>
-            <option value="nextstep">Next Steps</option>
-          </select>
-        </div>
-        <div class="form-group"><label id="dateLbl">Date *</label><input type="date" id="itemDate"></div>
-      </div>
-      <div class="form-group"><label>Folder Location</label><select id="itemFolder"><option value="">Root (No Folder)</option></select></div>
-      <div id="nsFields" style="display:none;">
-        <div class="modal .form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <div class="form-group"><label>Due Date</label><input type="date" id="itemDue"></div>
-          <div class="form-group"><label>Status</label><select id="itemStatus"><option value="pending">Pending</option><option value="in-progress">In Progress</option><option value="completed">Completed</option></select></div>
-        </div>
-        <div class="form-group"><label>Assign To</label><input type="text" id="itemAssignee" placeholder="Person responsible"></div>
-        <div class="form-group"><label>Assignee Email</label><input type="email" id="itemAssigneeEmail" placeholder="email@example.com"><div class="form-hint">Notification sent when task is assigned</div></div>
-      </div>
-      <div class="form-group">
-        <label>Description / Message</label>
-        <div class="rich-toolbar">
-          <button type="button" onclick="fmt('bold')"><strong>B</strong></button>
-          <button type="button" onclick="fmt('italic')"><em>I</em></button>
-          <button type="button" onclick="fmt('underline')"><u>U</u></button>
-          <span class="sep"></span>
-          <button type="button" onclick="fmt('insertUnorderedList')">• List</button>
-          <button type="button" onclick="fmt('insertOrderedList')">1. List</button>
-          <span class="sep"></span>
-          <button type="button" onclick="insLink()">🔗 Link</button>
-          <button type="button" onclick="fmt('removeFormat')">Clear</button>
-        </div>
-        <div class="rich-content" id="itemDesc" contenteditable="true" placeholder="Enter details…"></div>
-      </div>
-      <div class="form-group">
-        <label>Attach File or Link</label>
-        <div style="display:flex;gap:10px;margin-bottom:10px;">
-          <button type="button" id="tabUploadBtn" onclick="showTab('upload')" style="flex:1;padding:8px;background:var(--primary);color:white;border:2px solid var(--primary);border-radius:6px;cursor:pointer;font-weight:600;">Upload File</button>
-          <button type="button" id="tabLinkBtn" onclick="showTab('link')" style="flex:1;padding:8px;background:white;color:#333;border:2px solid #ccc;border-radius:6px;cursor:pointer;font-weight:600;">Paste Link</button>
-        </div>
-        <div id="uploadTab">
-          <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:36px;height:36px;stroke:#666;margin-bottom:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <p style="margin:0;color:#333;font-weight:600;">Click to upload or drag & drop</p>
-            <p style="margin:4px 0 0;color:#666;font-size:.8rem;">PDF, Excel, Word, PowerPoint</p>
-            <p id="fileNameDisplay" style="margin-top:8px;color:var(--primary);font-weight:600;"></p>
-          </div>
-          <input type="file" id="fileInput" accept=".pdf,.xlsx,.xls,.docx,.doc,.pptx,.ppt" style="display:none" onchange="onFileSelect(this)">
-        </div>
-        <div id="linkTab" style="display:none;">
-          <input type="text" id="linkUrl" placeholder="Paste Google Docs, Sheets, Drive, or any URL…" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:8px;margin-bottom:8px;">
-          <input type="text" id="linkName" placeholder="Link name (optional)" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:8px;">
-        </div>
-      </div>
-      <div class="form-group"><label>File Type</label><select id="itemFileType"><option value="">Auto-detect</option><option value="pdf">PDF</option><option value="excel">Excel</option><option value="word">Word</option><option value="ppt">PowerPoint</option><option value="other">Other</option></select></div>
-      <input type="hidden" id="itemFileUrl">
+      <div class="form-group"><label>Folder Name *</label><input type="text" id="folderName" placeholder="e.g. Reports 2024"></div>
+      <div class="form-group"><label>Parent Folder</label><select id="parentFolder"><option value="">Root (No parent)</option></select></div>
+      <div class="form-group"><label>Description</label><textarea id="folderDesc" placeholder="Optional description" rows="2"></textarea></div>
     </div>
     <div class="modal-footer">
-      <button class="btn" onclick="closeAddModal()" style="color:#333;border:2px solid #ccc;">Cancel</button>
+      <button class="btn" onclick="closeFolderModal()" style="background:#3a3a3a;color:#e0e0e0;">Cancel</button>
+      <button class="btn btn-success" onclick="createFolder()">Create Folder</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header blue"><h2 id="modalTitle">Add New File</h2><button class="modal-close" onclick="closeAddModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Title *</label><input type="text" id="itemTitle" placeholder="Enter title"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Section</label><select id="itemSection"><option value="routine-epi">Routine Epi</option><option value="routine-intervention">Intervention</option><option value="routine-stockout">Stockout</option><option value="campaign">Campaign</option><option value="report">Report</option><option value="email">Email</option><option value="meeting">Meeting</option><option value="nextstep">Next Step</option></select></div>
+        <div class="form-group"><label>Date</label><input type="date" id="itemDate"></div>
+      </div>
+      <div class="form-group"><label>Folder Location</label><select id="itemFolder"><option value="">Root</option></select></div>
+      <div id="nsFields" style="display:none;">
+        <div class="form-row"><div class="form-group"><label>Due Date</label><input type="date" id="itemDue"></div><div class="form-group"><label>Status</label><select id="itemStatus"><option value="pending">Pending</option><option value="in-progress">In Progress</option><option value="completed">Completed</option></select></div></div>
+        <div class="form-row"><div class="form-group"><label>Assignee</label><input type="text" id="itemAssignee"></div><div class="form-group"><label>Email</label><input type="email" id="itemAssigneeEmail"></div></div>
+      </div>
+      <div class="form-group"><label>Description</label><textarea id="itemDesc" rows="3" placeholder="Enter description..."></textarea></div>
+      <div class="form-group">
+        <label>Attachment</label>
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
+          <button type="button" onclick="showTab('upload')" id="tabUploadBtn" style="flex:1;padding:8px;background:var(--primary);color:white;border:none;border-radius:4px;">Upload File</button>
+          <button type="button" onclick="showTab('link')" id="tabLinkBtn" style="flex:1;padding:8px;background:#3a3a3a;color:#e0e0e0;border:none;border-radius:4px;">Paste Link</button>
+        </div>
+        <div id="uploadTab">
+          <input type="file" id="fileInput" accept=".pdf,.xlsx,.xls,.docx,.doc,.pptx,.ppt" style="display:none" onchange="onFileSelect(this)">
+          <div class="upload-zone" onclick="document.getElementById('fileInput').click()" style="background:#3a3a3a;border:2px dashed #4a4a4a;border-radius:4px;padding:20px;text-align:center;">
+            <p style="color:#999;">Click to upload or drag & drop</p>
+            <p id="fileNameDisplay" style="color:var(--accent);font-size:.8rem;margin-top:8px;"></p>
+          </div>
+        </div>
+        <div id="linkTab" style="display:none;">
+          <input type="text" id="linkUrl" placeholder="Paste URL here..." style="width:100%;padding:10px;background:#3a3a3a;border:2px solid #4a4a4a;color:#e0e0e0;border-radius:4px;margin-bottom:8px;">
+          <input type="text" id="linkName" placeholder="Link name (optional)" style="width:100%;padding:10px;background:#3a3a3a;border:2px solid #4a4a4a;color:#e0e0e0;border-radius:4px;">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAddModal()" style="background:#3a3a3a;color:#e0e0e0;">Cancel</button>
       <button class="btn btn-gold" onclick="saveItem()">Save</button>
     </div>
   </div>
 </div>
 
-<!-- ══ FOLDER MODAL ══ -->
-<div class="modal-overlay" id="folderModal">
-  <div class="modal" style="max-width:460px;">
-    <div class="modal-header green">
-      <h2>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
-        Create New Folder
-      </h2>
-      <button class="modal-close" onclick="closeFolderModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-    </div>
-    <div class="folder-modal-body">
-      <div class="folder-modal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
-      <div style="font-family:'Oswald',sans-serif;font-size:1rem;color:var(--gray-800);margin-bottom:4px;">Name your folder</div>
-      <div style="font-size:.82rem;color:var(--gray-600);margin-bottom:18px;">Organise your files into folders and sub-folders.</div>
-      <div class="form-group"><label>Folder Name <span style="color:var(--danger)">*</span></label><input type="text" id="folderName" placeholder="e.g. Q1 Reports, Campaign Data…" style="font-size:1rem;"></div>
-      <div class="form-group"><label>Parent Folder <span style="font-weight:400;color:var(--gray-400)">(optional)</span></label><select id="parentFolder"></select></div>
-      <div class="form-group"><label>Description <span style="font-weight:400;color:var(--gray-400)">(optional)</span></label><textarea id="folderDesc" placeholder="Briefly describe what this folder contains…" rows="2"></textarea></div>
-    </div>
-    <div class="folder-modal-footer">
-      <button class="btn" onclick="closeFolderModal()" style="color:#333;border:2px solid #ccc;">Cancel</button>
-      <button class="btn btn-success" onclick="createFolder()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Create Folder
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MOVE MODAL ══ -->
 <div class="modal-overlay" id="moveModal">
-  <div class="modal" style="max-width:440px;">
-    <div class="modal-header purple"><h2>Move Item</h2><button class="modal-close" onclick="closeMoveModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+  <div class="modal">
+    <div class="modal-header purple"><h2>Move Item</h2><button class="modal-close" onclick="closeMoveModal()">✕</button></div>
     <div class="modal-body">
-      <p id="moveItemInfo" style="background:var(--gray-100);padding:10px;border-radius:8px;margin-bottom:14px;font-size:.88rem;"></p>
-      <div class="form-group"><label>Select Destination</label><div class="folder-tree" id="folderTree"></div></div>
+      <p id="moveItemInfo" style="background:#3a3a3a;padding:10px;border-radius:4px;margin-bottom:15px;"></p>
+      <div class="form-group"><label>Select Destination Folder</label><div class="folder-tree" id="folderTreeMove"></div></div>
     </div>
     <div class="modal-footer">
-      <button class="btn" onclick="closeMoveModal()" style="color:#333;border:2px solid #ccc;">Cancel</button>
+      <button class="btn" onclick="closeMoveModal()" style="background:#3a3a3a;color:#e0e0e0;">Cancel</button>
       <button class="btn btn-purple" onclick="confirmMove()">Move Here</button>
     </div>
   </div>
 </div>
 
-<!-- ══ PREVIEW MODAL ══ -->
-<div class="modal-overlay" id="previewModal">
-  <div class="modal" style="max-width:800px;">
-    <div class="modal-header blue"><h2 id="previewTitle">Details</h2><button class="modal-close" onclick="closePreviewModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
-    <div class="modal-body">
-      <div id="previewContainer"></div>
-      <div class="comments-section" id="commentsSection"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closePreviewModal()" style="color:#333;border:2px solid #ccc;">Close</button>
-      <button class="btn btn-success" id="prevDlBtn" style="display:none;" onclick="downloadPreview()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download
-      </button>
-      <button class="btn btn-info" id="prevOpenBtn" style="display:none;" onclick="openPreviewFile()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Open File
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ COMPLETE TASK MODAL ══ -->
-<div class="modal-overlay" id="completeModal">
-  <div class="modal">
-    <div class="modal-header green"><h2>Mark Task Complete</h2><button class="modal-close" onclick="closeCompleteModal()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
-    <div class="modal-body">
-      <div id="completeInfo" style="background:var(--gray-100);padding:12px;border-radius:8px;margin-bottom:14px;"></div>
-      <div class="form-group"><label>Completion Notes *</label><textarea id="completeNotes" placeholder="Describe what was done…" rows="4"></textarea></div>
-      <div class="form-group"><label>Evidence URL (Optional)</label><input type="text" id="completeEvidence" placeholder="Link to supporting document"></div>
-      <div class="form-group"><label>Completion Date</label><input type="date" id="completeDate"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeCompleteModal()" style="color:#333;border:2px solid #ccc;">Cancel</button>
-      <button class="btn btn-success" onclick="confirmComplete()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Mark Complete
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ DELETE ITEM MODAL ══ -->
 <div class="modal-overlay" id="deleteModal">
-  <div class="modal confirm-modal">
-    <div class="confirm-header" style="background:var(--danger);">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-      <h3>Delete Item</h3>
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header red"><h2>Delete</h2><button class="modal-close" onclick="closeDeleteModal()">✕</button></div>
+    <div class="modal-body" style="text-align:center;">
+      <p style="margin-bottom:15px;">Are you sure you want to delete?</p>
+      <p style="background:#3a3a3a;padding:10px;border-radius:4px;font-weight:600;" id="deleteItemTitle"></p>
+      <p style="color:#999;font-size:.8rem;margin-top:10px;">This action cannot be undone.</p>
     </div>
-    <div class="confirm-body"><p>Are you sure you want to delete?</p><p class="confirm-title" id="deleteItemTitle"></p><p>This cannot be undone.</p></div>
-    <div class="confirm-footer">
-      <button class="btn" onclick="closeDeleteModal()" style="color:#333;border:2px solid #ccc;">Cancel</button>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeDeleteModal()" style="background:#3a3a3a;color:#e0e0e0;">Cancel</button>
       <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
     </div>
   </div>
 </div>
 
-<!-- ══ DELETE FOLDER MODAL ══ -->
-<div class="modal-overlay" id="delFolderModal">
-  <div class="modal confirm-modal">
-    <div class="confirm-header" style="background:var(--danger);">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
-      <h3>Delete Folder</h3>
-    </div>
-    <div class="confirm-body"><p>Delete folder?</p><p class="confirm-title" id="delFolderName"></p><p>All items inside will be moved to root.</p></div>
-    <div class="confirm-footer">
-      <button class="btn" onclick="closeDelFolderModal()" style="color:#333;border:2px solid #ccc;">Cancel</button>
-      <button class="btn btn-danger" onclick="confirmDeleteFolder()">Delete</button>
-    </div>
-  </div>
-</div>
-
-<div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><div class="loading-text" id="loadingText">Loading…</div></div>
+<div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><div class="loading-text" id="loadingText">Loading...</div></div>
 <div class="notif" id="notif"></div>
 
 <script>
 // ══════════════════════════════════════════════════
-//  CONFIG — replace with your deployed GAS URL
+//  CONFIG - Replace with your GAS URL
 // ══════════════════════════════════════════════════
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxOagMeDuwnVg7xglYlFeMP5r4E7ns5cIQHmI8cOJovSG6WmpdhEXYLTg0xgh-G7kgo/exec';
-
-// Admin is the only built-in account — all others come from GAS / localStorage
-const ADMIN = { username:'admin', password:'admin2', name:'Administrator', role:'admin' };
-
-// ══════════════════════════════════════════════════
-//  ICONS
-// ══════════════════════════════════════════════════
-const IC = {
-  folder:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
-  folderOpen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9V5a2 2 0 0 1 2-2h4l2 3h9a2 2 0 0 1 2 2v1"/><path d="M2 9v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9"/><path d="M2 9h20"/></svg>',
-  chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
-  activity:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
-  package:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>',
-  target:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
-  database:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
-  fileText:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
-  upload:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
-  email:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
-  meeting:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-  nextstep:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
-  file:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
-  calendar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
-  eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
-  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
-  comment:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
-  send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
-  reply:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>'
-};
-
-// ══════════════════════════════════════════════════
-//  SECTIONS
-// ══════════════════════════════════════════════════
-const sections = [
-  {id:'all',        name:'All Items',   icon:'folder',   desc:'Browse all items'},
-  {id:'routine-epi',name:'Routine Epi', icon:'chart',    desc:'Epidemiological data', items:[]},
-  {id:'routine-intervention',name:'Intervention',icon:'activity',desc:'Intervention data',items:[]},
-  {id:'routine-stockout',name:'Stockout',icon:'package', desc:'Stock data', items:[]},
-  {id:'campaign',   name:'Campaign',    icon:'target',   desc:'Campaign datasets', items:[]},
-  {id:'other-dataset',name:'Other',     icon:'database', desc:'Other datasets', items:[]},
-  {id:'report',     name:'Report',      icon:'fileText', desc:'Reports', items:[]},
-  {id:'output',     name:'Output',      icon:'upload',   desc:'Outputs', items:[]},
-  {id:'email',      name:'Email',       icon:'email',    desc:'Emails', items:[]},
-  {id:'meeting',    name:'Meeting',     icon:'meeting',  desc:'Meeting notes', items:[]},
-  {id:'nextstep',   name:'Next Steps',  icon:'nextstep', desc:'Action items', items:[]}
-];
+const GAS_URL = 'YOUR_GAS_WEB_APP_URL_HERE';
+const ADMIN = { username: 'admin', password: 'admin2', name: 'Administrator', role: 'admin' };
 
 // ══════════════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════════════
-let currentUser=null, userRole='user';
-let folders=[], currentFolderId=null;
-let curSecIdx=0, curItems=[];
-let selFile=null, selFileData=null;
-let previewItem=null, editingItem=null, replyingTo=null, itemToMove=null;
-let itemToDelete=null, folderToDelete=null, itemToComplete=null;
-let selMoveFolder=null, editingCmtIdx=null;
+let currentUser = null, userRole = 'user';
+let folders = [], items = [], currentFolderId = null;
+let folderTree = [], flatFolders = [];
+let searchQuery = '';
+let draggedItem = null, dragOverFolder = null;
 
 // ══════════════════════════════════════════════════
-//  LOCAL USER CACHE (supplements GAS)
+//  ICONS
 // ══════════════════════════════════════════════════
-function getLocalUsers(){ try{return JSON.parse(localStorage.getItem('sntUsers')||'[]');}catch(e){return [];} }
-function saveLocalUsers(a){ localStorage.setItem('sntUsers',JSON.stringify(a)); }
+const icons = {
+  folder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
+  folderOpen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9V5a2 2 0 0 1 2-2h4l2 3h9a2 2 0 0 1 2 2v1"/><path d="M2 9v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9"/><path d="M2 9h20"/></svg>',
+  file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+  pdf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15h6M9 18h4"/></svg>',
+  excel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M8 2v20M16 2v20M2 8h20M2 16h20"/></svg>',
+  word: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 12h8M8 16h6"/></svg>',
+  ppt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M8 2v20M16 2v20M2 8h20M2 16h20"/><circle cx="12" cy="12" r="2"/></svg>',
+  email: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+  meeting: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  nextstep: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+  calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  comment: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+};
 
 // ══════════════════════════════════════════════════
-//  AUTH HELPERS
+//  AUTH FUNCTIONS (same as before)
 // ══════════════════════════════════════════════════
-function switchTab(t){
-  const isIn=t==='in';
-  document.getElementById('tabIn').classList.toggle('active',isIn);
-  document.getElementById('tabUp').classList.toggle('active',!isIn);
-  document.getElementById('signInBody').style.display=isIn?'':'none';
-  document.getElementById('signUpBody').style.display=isIn?'none':'';
-  document.getElementById('loginErr').classList.remove('show');
-  document.getElementById('signupErr').classList.remove('show');
-  document.getElementById('signupOk').classList.remove('show');
+function switchTab(tab) {
+  const isIn = tab === 'in';
+  document.querySelectorAll('.auth-tab').forEach(el => el.classList.toggle('active', el.innerText.includes(isIn ? 'In' : 'Up')));
+  document.getElementById('signInBody').style.display = isIn ? '' : 'none';
+  document.getElementById('signUpBody').style.display = isIn ? 'none' : '';
 }
-function togglePw(id,btn){ const el=document.getElementById(id);const sh=el.type==='text';el.type=sh?'password':'text';btn.textContent=sh?'👁':'🙈'; }
-function checkStrength(pw){
-  const f=document.getElementById('strengthFill');
-  let s=0;if(pw.length>=8)s++;if(/[A-Z]/.test(pw))s++;if(/[0-9]/.test(pw))s++;if(/[^A-Za-z0-9]/.test(pw))s++;
-  f.style.width=(s/4*100)+'%';
-  f.style.background=['#dc3545','#fd7e14','#ffc107','#28a745'][s-1]||'transparent';
+function togglePw(id, btn) {
+  const el = document.getElementById(id);
+  const isText = el.type === 'text';
+  el.type = isText ? 'password' : 'text';
+  btn.textContent = isText ? '👁' : '🙈';
+}
+function checkStrength(pw) {
+  const fill = document.getElementById('strengthFill');
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  fill.style.width = (score / 4 * 100) + '%';
+  fill.style.background = ['#dc3545','#fd7e14','#ffc107','#28a745'][score-1] || 'transparent';
 }
 
-async function doLogin(e){
-  e.preventDefault();
-  const uval=document.getElementById('liUser').value.trim().toLowerCase();
-  const pval=document.getElementById('liPw').value;
-  const errEl=document.getElementById('loginErr');
-  errEl.classList.remove('show');
-  const btn=document.getElementById('loginBtn');
-  btn.disabled=true; btn.textContent='Signing in…';
-
-  // 1. Admin check (hardcoded, no network needed)
-  if((uval===ADMIN.username||uval===ADMIN.email?.toLowerCase())&&pval===ADMIN.password){
-    currentUser=ADMIN.name; userRole=ADMIN.role;
-    btn.disabled=false; btn.textContent='Sign In';
-    showApp(); return;
-  }
-
-  // 2. Try GAS users
-  let matched=null;
-  try{
-    const res=await fetch(GAS_URL+'?action=getUsers');
-    const d=await res.json();
-    if(d.success&&Array.isArray(d.users)){
-      // merge into local cache
-      const local=getLocalUsers();
-      d.users.forEach(u=>{if(!local.find(l=>l.username===u.username)){local.push(u);}});
-      saveLocalUsers(local);
-      matched=d.users.find(u=>(u.username.toLowerCase()===uval||u.email.toLowerCase()===uval)&&u.password===pval);
+// ══════════════════════════════════════════════════
+//  FOLDER TREE FUNCTIONS
+// ══════════════════════════════════════════════════
+async function loadFolderTree() {
+  try {
+    const res = await fetch(GAS_URL + '?action=getFolderTree');
+    const data = await res.json();
+    if (data.success) {
+      folderTree = data.tree;
+      flatFolders = data.flatList || [];
+      folders = flatFolders;
+      renderSidebarTree();
+      populateFolderSelects();
     }
-  }catch(err){}
-
-  // 3. Fallback to local cache
-  if(!matched) matched=getLocalUsers().find(u=>(u.username.toLowerCase()===uval||u.email.toLowerCase()===uval)&&u.password===pval);
-
-  btn.disabled=false; btn.textContent='Sign In';
-
-  if(!matched){
-    errEl.textContent='Invalid username or password.';
-    errEl.classList.add('show');
-    setTimeout(()=>errEl.classList.remove('show'),4000);
-    return;
+  } catch (e) {
+    console.log('Using local folders', e);
+    buildLocalTree();
   }
-  currentUser=matched.name||matched.username; userRole=matched.role||'user';
-  showApp();
 }
 
-async function doSignUp(e){
-  e.preventDefault();
-  const fn=document.getElementById('suFirst').value.trim();
-  const ln=document.getElementById('suLast').value.trim();
-  const email=document.getElementById('suEmail').value.trim().toLowerCase();
-  const uname=document.getElementById('suUser').value.trim().toLowerCase().replace(/\s+/g,'_');
-  const role=document.getElementById('suRole').value;
-  const pw=document.getElementById('suPw').value;
-  const confirm=document.getElementById('suConfirm').value;
-  const errEl=document.getElementById('signupErr');
-  const okEl=document.getElementById('signupOk');
-  errEl.classList.remove('show'); okEl.classList.remove('show');
-
-  if(uname===ADMIN.username){errEl.textContent='That username is reserved.';errEl.classList.add('show');return;}
-  if(pw.length<8){errEl.textContent='Password must be at least 8 characters.';errEl.classList.add('show');return;}
-  if(pw!==confirm){errEl.textContent='Passwords do not match.';errEl.classList.add('show');return;}
-
-  // Check local duplicates first
-  const local=getLocalUsers();
-  if(local.find(u=>u.username===uname||u.email===email)){
-    errEl.textContent='Username or email already registered.';errEl.classList.add('show');return;
-  }
-
-  const btn=document.getElementById('signupBtn');
-  btn.disabled=true; btn.textContent='Creating account…';
-
-  const newUser={username:uname,email,password:pw,name:fn+' '+ln,role,createdAt:new Date().toISOString()};
-
-  // Try GAS first (authoritative)
-  let gasOk=false;
-  try{
-    const res=await fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'createUser',user:newUser})});
-    gasOk=true;
-  }catch(err){}
-
-  // Always save locally as fallback
-  local.push(newUser);
-  saveLocalUsers(local);
-
-  btn.disabled=false; btn.textContent='Create Account';
-  okEl.classList.add('show');
-  setTimeout(()=>{okEl.classList.remove('show');switchTab('in');document.getElementById('liUser').value=uname;},2500);
-}
-
-function logout(){
-  currentUser=null; userRole='user';
-  document.getElementById('authScreen').classList.remove('hidden');
-  document.getElementById('appContainer').classList.remove('active');
-  document.getElementById('liUser').value='';
-  document.getElementById('liPw').value='';
-}
-
-// ══════════════════════════════════════════════════
-//  FOLDERS
-// ══════════════════════════════════════════════════
-function initFolders(){
-  try{folders=JSON.parse(localStorage.getItem('sntFolders')||'[]');}catch(e){folders=[];}
-}
-function saveFolders(){localStorage.setItem('sntFolders',JSON.stringify(folders));}
-function getFolderById(id){return folders.find(f=>f.id===id);}
-function getSubfolders(pid){return folders.filter(f=>f.parentId===(pid||null));}
-function getFolderPath(id){const p=[];let c=getFolderById(id);while(c){p.unshift(c);c=getFolderById(c.parentId);}return p;}
-
-function renderBreadcrumb(){
-  const el=document.getElementById('breadcrumb');
-  if(!currentFolderId){el.innerHTML=`<span class="bc-item" onclick="navToFolder(null)">${IC.folder} Root</span>`;return;}
-  const path=getFolderPath(currentFolderId);
-  let h=`<span class="bc-item" onclick="navToFolder(null)">${IC.folder} Root</span>`;
-  path.forEach((f,i)=>{
-    h+=`<span class="bc-sep">/</span>`;
-    if(i===path.length-1) h+=`<span class="bc-item">${IC.folderOpen} ${f.name}</span>`;
-    else h+=`<span class="bc-item" onclick="navToFolder('${f.id}')">${f.name}</span>`;
+function buildLocalTree() {
+  const map = {};
+  folders.forEach(f => map[f.id] = { ...f, children: [] });
+  folderTree = [];
+  folders.forEach(f => {
+    if (f.parentId && map[f.parentId]) map[f.parentId].children.push(map[f.id]);
+    else folderTree.push(map[f.id]);
   });
-  el.innerHTML=h;
+  sortTree(folderTree);
+  renderSidebarTree();
 }
 
-function navToFolder(id){
-  currentFolderId=id;
+function sortTree(nodes) {
+  nodes.sort((a, b) => a.name.localeCompare(b.name));
+  nodes.forEach(n => sortTree(n.children));
+}
+
+function renderSidebarTree() {
+  const renderNode = (node, level = 0) => {
+    const selectedClass = node.id === currentFolderId ? 'selected' : '';
+    return `
+      <div class="tree-item ${selectedClass}" onclick="navToFolder('${node.id}')" style="padding-left:${level * 20 + 8}px;">
+        <span class="tree-arrow">${node.children?.length ? '▼' : '▶'}</span>
+        ${icons.folderOpen}
+        <span>${node.name}</span>
+      </div>
+      ${node.children?.map(child => renderNode(child, level + 1)).join('') || ''}
+    `;
+  };
+  const html = `
+    <div class="tree-item ${!currentFolderId ? 'selected' : ''}" onclick="navToFolder(null)">
+      ${icons.folder} <span>Root</span>
+    </div>
+    ${folderTree.map(node => renderNode(node, 0)).join('')}
+  `;
+  document.getElementById('folderTreeSidebar').innerHTML = html;
+}
+
+function renderBreadcrumb() {
+  const path = [];
+  let current = flatFolders.find(f => f.id === currentFolderId);
+  while (current) {
+    path.unshift(current);
+    current = flatFolders.find(f => f.id === current.parentId);
+  }
+  let html = `<span class="path-item" onclick="navToFolder(null)">${icons.folder} Root</span>`;
+  path.forEach((f, i) => {
+    html += `<span class="path-sep">›</span>`;
+    html += `<span class="path-item" onclick="navToFolder('${f.id}')">${f.name}</span>`;
+  });
+  document.getElementById('breadcrumb').innerHTML = html;
+  document.getElementById('goUpBtn').style.display = currentFolderId ? 'inline-flex' : 'none';
+}
+
+function navToFolder(id) {
+  currentFolderId = id;
+  renderSidebarTree();
   renderBreadcrumb();
-  const bar=document.getElementById('folderBar');
-  if(id){bar.style.display='flex';document.getElementById('folderBarPath').innerHTML=`${IC.folderOpen} Current: ${getFolderById(id).name}`;}
-  else bar.style.display='none';
-  loadSection(curSecIdx);
+  loadItems();
 }
-function goUp(){if(currentFolderId)navToFolder(getFolderById(currentFolderId).parentId);}
 
-function getItemsInFolder(){
-  const all=sections.flatMap(s=>(s.items||[]).map(i=>({...i,sectionName:s.name})));
-  if(!currentFolderId) return all.filter(i=>!i.folderId||!getFolderById(i.folderId));
-  return all.filter(i=>i.folderId===currentFolderId);
+function goUp() {
+  if (currentFolderId) {
+    const parent = flatFolders.find(f => f.id === currentFolderId)?.parentId;
+    navToFolder(parent || null);
+  }
 }
 
 // ══════════════════════════════════════════════════
-//  STORAGE / SYNC
+//  ITEMS FUNCTIONS
 // ══════════════════════════════════════════════════
-function loadFromLocal(){
-  try{
-    const saved=localStorage.getItem('sntDataV4');
-    if(saved){
-      sections.forEach(s=>{if(s.items)s.items=[];});
-      JSON.parse(saved).forEach(item=>{const s=sections.find(x=>x.id===item.section);if(s?.items&&!s.items.find(i=>i.id===item.id))s.items.push(item);});
+async function loadItems() {
+  try {
+    const res = await fetch(GAS_URL + `?action=getFolderItems&folderId=${currentFolderId || ''}`);
+    const data = await res.json();
+    if (data.success) {
+      items = data.items;
+      renderItems();
     }
-  }catch(e){}
-  initFolders();
+  } catch (e) {
+    items = JSON.parse(localStorage.getItem('sntItems') || '[]')
+      .filter(i => (i.folderId || null) === (currentFolderId || null));
+    renderItems();
+  }
 }
 
-async function loadFromGAS(){
-  try{
-    showLoading('Syncing data…');
-    const res=await fetch(GAS_URL+'?action=getData');
-    const d=await res.json();
-    if(d.success&&d.data?.data){
-      sections.forEach(s=>{if(s.items)s.items=[];});
-      d.data.data.forEach(item=>{const s=sections.find(x=>x.id===item.section);if(s?.items&&!s.items.find(i=>i.id===item.id))s.items.push(item);});
-      localStorage.setItem('sntDataV4',JSON.stringify(d.data.data));
-      if(d.data.folders){folders=d.data.folders;saveFolders();}
-      if(d.data.users){
-        const local=getLocalUsers();
-        d.data.users.forEach(u=>{if(!local.find(l=>l.username===u.username)&&u.username!==ADMIN.username)local.push(u);});
-        saveLocalUsers(local);
-      }
-      hideLoading(); return true;
-    }
-  }catch(e){}
-  hideLoading(); return false;
-}
-
-async function manualSync(){
-  const ok=await loadFromGAS();
-  renderTabs(); loadSection(curSecIdx); renderBreadcrumb();
-  showNotif(ok?'Synced from cloud!':'Using local data — could not reach server.',ok?'success':'info');
-}
-
-function saveToStorage(){
-  const all=sections.flatMap(s=>s.items||[]);
-  localStorage.setItem('sntDataV4',JSON.stringify(all));
-  saveFolders();
-  // async sync to GAS
-  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sync',data:all,folders,users:getLocalUsers()})}).catch(()=>{});
-}
-
-function gasNotify(action,data){
-  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...data})}).catch(()=>{});
-}
-
-// ══════════════════════════════════════════════════
-//  SHOW APP
-// ══════════════════════════════════════════════════
-function showApp(){
-  document.getElementById('authScreen').classList.add('hidden');
-  document.getElementById('appContainer').classList.add('active');
-  document.getElementById('userDisplay').textContent=currentUser;
-  document.getElementById('roleDisplay').textContent=userRole.charAt(0).toUpperCase()+userRole.slice(1);
-  document.getElementById('userBadge').className='user-badge '+userRole;
-  loadFromGAS().then(ok=>{
-    if(!ok)loadFromLocal();
-    renderTabs();loadSection(0);renderBreadcrumb();populateSelects();
-  }).catch(()=>{loadFromLocal();renderTabs();loadSection(0);renderBreadcrumb();populateSelects();});
-}
-
-// ══════════════════════════════════════════════════
-//  SECTIONS
-// ══════════════════════════════════════════════════
-function renderTabs(){
-  document.getElementById('secTabs').innerHTML=sections.map((s,i)=>
-    `<button class="sec-tab ${i===curSecIdx?'active':''}" onclick="loadSection(${i})">${IC[s.icon]||IC.folder}<span>${s.name}</span><span class="tab-count">${secCount(s)}</span></button>`
-  ).join('');
-}
-function secCount(s){
-  if(s.id==='all') return currentFolderId?getItemsInFolder().length:sections.reduce((n,x)=>n+(x.items?.length||0),0);
-  return s.items?.length||0;
-}
-function loadSection(idx){
-  curSecIdx=idx;
-  const s=sections[idx];
-  document.querySelectorAll('.sec-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
-  document.getElementById('secIcon').innerHTML=IC[s.icon]||IC.folder;
-  document.getElementById('secTitle').textContent=s.name;
-  if(s.id==='all') curItems=getItemsInFolder();
-  else{const si=(s.items||[]).map(i=>({...i,sectionName:s.name}));curItems=currentFolderId?si.filter(i=>i.folderId===currentFolderId):si.filter(i=>!i.folderId||!getFolderById(i.folderId));}
-  curItems.sort((a,b)=>{
-    if(a.section==='nextstep'&&b.section==='nextstep'){if(a.status==='completed'&&b.status!=='completed')return 1;if(a.status!=='completed'&&b.status==='completed')return -1;}
-    return new Date(b.date||0)-new Date(a.date||0);
-  });
-  document.getElementById('secSub').textContent=`${curItems.length} item${curItems.length!==1?'s':''} — ${s.desc}`;
-  renderItems();
-}
-function prevSec(){if(curSecIdx>0)loadSection(curSecIdx-1);}
-function nextSec(){if(curSecIdx<sections.length-1)loadSection(curSecIdx+1);}
-
-// ══════════════════════════════════════════════════
-//  HELPERS
-// ══════════════════════════════════════════════════
-const fmtDate=d=>d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
-const fmtDT=d=>d?new Date(d).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
-const stripHtml=h=>{const t=document.createElement('div');t.innerHTML=h;return t.textContent||'';};
-function statusClass(item){if(item.section!=='nextstep')return '';if(item.status==='completed')return 'completed';if(item.status==='in-progress')return 'in-progress';if(item.dueDate&&new Date(item.dueDate)<new Date())return 'overdue';return 'pending';}
-function statusLabel(item){return{completed:'Completed','in-progress':'In Progress',overdue:'Overdue',pending:'Pending'}[statusClass(item)]||'Pending';}
-function itemIcon(item){if(item.section==='email')return 'email';if(item.section==='meeting')return 'meeting';if(item.section==='nextstep')return 'nextstep';return item.fileType||'file';}
-function ftLabel(t){return{pdf:'PDF',excel:'Excel',word:'Word',ppt:'PPT','google-doc':'Google Doc','google-sheet':'Google Sheet','google-slides':'Google Slides','google-drive':'Google Drive',dropbox:'Dropbox',onedrive:'OneDrive',link:'Link'}[t]||'File';}
-function detectFT(url){if(!url)return 'other';const u=url.toLowerCase();if(u.includes('.pdf'))return 'pdf';if(u.includes('.xls')||u.includes('spreadsheet'))return 'excel';if(u.includes('.doc')||u.includes('document'))return 'word';if(u.includes('.ppt')||u.includes('presentation'))return 'ppt';return 'other';}
-function extLinkType(url){if(!url)return 'link';const u=url.toLowerCase();if(u.includes('docs.google.com/document'))return 'google-doc';if(u.includes('docs.google.com/spreadsheets'))return 'google-sheet';if(u.includes('docs.google.com/presentation'))return 'google-slides';if(u.includes('drive.google.com'))return 'google-drive';if(u.includes('dropbox.com'))return 'dropbox';if(u.includes('onedrive.live.com')||u.includes('sharepoint.com'))return 'onedrive';return 'link';}
-function linkDisplayName(url){if(!url)return 'External Link';if(url.includes('docs.google.com/document'))return 'Google Doc';if(url.includes('docs.google.com/spreadsheets'))return 'Google Sheet';if(url.includes('docs.google.com/presentation'))return 'Google Slides';if(url.includes('drive.google.com'))return 'Google Drive File';try{const p=new URL(url).pathname.split('/').pop();if(p&&p.includes('.'))return decodeURIComponent(p);}catch(e){}return 'External Link';}
-
-// ══════════════════════════════════════════════════
-//  RENDER ITEMS
-// ══════════════════════════════════════════════════
-function renderItems(){
-  const grid=document.getElementById('itemsGrid');
-  const subs=getSubfolders(currentFolderId);
-  if(!curItems.length&&!subs.length){
-    grid.innerHTML=`<div class="empty-state"><div class="empty-icon">${IC.folder}</div><h3>No items</h3><p>This folder is empty</p><button class="btn btn-gold" onclick="openAddModal()" style="margin-top:10px;">${IC.file} Add File</button></div>`;
+function renderItems() {
+  const filtered = searchQuery ? items.filter(i => 
+    i.title.toLowerCase().includes(searchQuery) ||
+    i.description?.toLowerCase().includes(searchQuery)
+  ) : items;
+  
+  document.getElementById('itemCount').textContent = `${filtered.length} item${filtered.length !== 1 ? 's' : ''}`;
+  
+  if (!filtered.length) {
+    document.getElementById('itemsGrid').innerHTML = `
+      <div class="empty-state">
+        ${icons.folder}
+        <h3>This folder is empty</h3>
+        <p>Drop files here or click "Add File" to upload</p>
+      </div>
+    `;
     return;
   }
-  let h='';
-  subs.forEach(f=>{
-    const adminBtns=userRole==='admin'?`<button class="fmini-btn fmini-del" onclick="event.stopPropagation();openDelFolderModal('${f.id}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>Delete</button>`:'';
-    h+=`<div class="folder-card" onclick="navToFolder('${f.id}')">
-      <div class="folder-card-header"><div class="folder-icon">${IC.folderOpen}</div>
-        <div class="folder-info"><div class="folder-name">${f.name}</div>
-        <div class="folder-meta"><span>📅 ${fmtDate(f.createdAt)}</span><span>by ${f.createdBy||'System'}</span></div>
-        ${f.description?`<div class="folder-desc">${f.description}</div>`:''}</div></div>
-      ${adminBtns?`<div class="folder-actions-bar" onclick="event.stopPropagation()">${adminBtns}</div>`:''}</div>`;
-  });
-  curItems.forEach((item,i)=>{
-    const icon=itemIcon(item);const sc=statusClass(item);const done=item.status==='completed';const over=sc==='overdue';
-    const cCount=(item.comments||[]).length;
-    const canDone=item.section==='nextstep'&&!done&&(userRole==='supervisor'||userRole==='admin');
-    const canEdit=!(item.section==='nextstep'&&userRole==='user');
-    const canDel=userRole==='admin';
-    h+=`<div class="item-card ${done?'completed':''} ${over?'overdue':''}">
-      <div class="item-card-header">
-        <div class="item-type-icon ${icon}">${IC[icon]||IC.file}</div>
-        <div class="item-info">
-          <div class="item-name">${item.title}</div>
-          <div class="item-meta">
-            ${item.date?`<span class="item-date">${IC.calendar} ${fmtDate(item.date)}</span>`:''}
-            ${item.section==='nextstep'?`<span class="status-badge ${sc}">${statusLabel(item)}</span>`:''}
-            ${item.fileName?`<span>${item.fileName}</span>`:(item.fileType?`<span>${ftLabel(item.fileType)}</span>`:'')}
+  
+  let html = '';
+  filtered.forEach((item, idx) => {
+    const iconType = item.fileType || item.section || 'file';
+    const statusClass = item.status === 'completed' ? 'completed' : '';
+    html += `
+      <div class="item-card ${statusClass}" draggable="true" 
+           ondragstart="dragStart(event, '${item.id}')" 
+           ondragend="dragEnd(event)"
+           onclick="openPreview('${item.id}')">
+        <div class="item-card-header">
+          <div class="item-type-icon ${iconType}">${icons[iconType] || icons.file}</div>
+          <div class="item-info">
+            <div class="item-name">${item.title}</div>
+            <div class="item-meta">
+              <span>${item.date ? new Date(item.date).toLocaleDateString() : ''}</span>
+              ${item.status ? `<span class="status-badge ${item.status}">${item.status}</span>` : ''}
+            </div>
           </div>
         </div>
-      </div>
-      <div class="item-card-body">
-        ${item.assignee?`<div class="item-assignee">${IC.user}<div><span class="assignee-name">${item.assignee}</span>${item.assigneeEmail?`<span class="assignee-email"> ${item.assigneeEmail}</span>`:''}</div></div>`:''}
-        ${item.dueDate&&item.section==='nextstep'?`<p style="font-size:.8rem;color:${over&&!done?'var(--danger)':'var(--gray-600)'};margin-bottom:8px;">Due: ${fmtDate(item.dueDate)}</p>`:''}
-        <div class="item-desc">${item.description||'No description'}</div>
-        ${cCount>0?`<div class="comments-indicator" onclick="openPreview(${i})">${IC.comment}<span class="cnt">${cCount}</span> comment${cCount!==1?'s':''}</div>`:''}
-        <div class="item-actions">
-          <button class="ibtn ibtn-view" onclick="openPreview(${i})">${IC.eye} View</button>
-          ${item.fileUrl?`<button class="ibtn ibtn-dl" onclick="dlFile(${i})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Open</button>`:''}
-          <button class="ibtn ibtn-cmt" onclick="openPreview(${i},true)">${IC.comment}</button>
-          ${canDone?`<button class="ibtn ibtn-done" onclick="openCompleteModal(${i})">${IC.check} Done</button>`:''}
-          ${canEdit?`<button class="ibtn ibtn-edit" onclick="openEditModal(${i})" title="Edit">${IC.file}</button>`:''}
-          ${canDel?`<button class="ibtn ibtn-move" onclick="openMoveModal(${i})" title="Move"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg></button>`:''}
-          ${canDel?`<button class="ibtn ibtn-del" onclick="openDeleteModal(${i})" title="Delete">${IC.file}</button>`:''}
+        <div class="item-body">
+          <div class="item-desc">${item.description || 'No description'}</div>
+        </div>
+        <div class="item-footer">
+          <button class="item-btn" onclick="event.stopPropagation();openPreview('${item.id}')">${icons.eye} View</button>
+          ${item.fileUrl ? `<button class="item-btn" onclick="event.stopPropagation();downloadFile('${item.fileUrl}')">📥 Download</button>` : ''}
+          ${userRole === 'admin' ? `
+            <button class="item-btn" onclick="event.stopPropagation();openMoveModal('${item.id}')">📂 Move</button>
+            <button class="item-btn" onclick="event.stopPropagation();openDeleteModal('${item.id}')">🗑️ Delete</button>
+          ` : ''}
         </div>
       </div>
-    </div>`;
+    `;
   });
-  grid.innerHTML=h;
+  document.getElementById('itemsGrid').innerHTML = html;
 }
 
 // ══════════════════════════════════════════════════
-//  SEARCH
+//  DRAG & DROP (Windows Explorer Style)
 // ══════════════════════════════════════════════════
-function handleSearch(q){
-  if(!q.trim()){loadSection(curSecIdx);return;}
-  const ql=q.toLowerCase();
-  curItems=sections.flatMap(s=>(s.items||[]).map(i=>({...i,sectionName:s.name}))).filter(i=>
-    i.title.toLowerCase().includes(ql)||(i.description&&i.description.toLowerCase().includes(ql))||(i.assignee&&i.assignee.toLowerCase().includes(ql))
-  );
-  document.getElementById('secSub').textContent=`${curItems.length} result${curItems.length!==1?'s':''}`;
-  renderItems();
+function dragStart(e, itemId) {
+  draggedItem = itemId;
+  e.dataTransfer.setData('text/plain', itemId);
+  e.target.classList.add('dragging');
 }
 
-// ══════════════════════════════════════════════════
-//  FOLDER SELECTS / TREE
-// ══════════════════════════════════════════════════
-function populateSelects(){
-  ['itemFolder','parentFolder'].forEach(id=>{
-    const el=document.getElementById(id); if(!el)return;
-    el.innerHTML=id==='parentFolder'?'<option value="">📁 Root — no parent</option>':'<option value="">Root (No Folder)</option>';
-    folders.forEach(f=>{const path=getFolderPath(f.id).map(x=>x.name).join(' / ');el.innerHTML+=`<option value="${f.id}">${path}</option>`;});
-  });
-  renderFolderTree(document.getElementById('folderTree'),null);
+function dragEnd(e) {
+  e.target.classList.remove('dragging');
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
 }
-function renderFolderTree(el,selId){
-  if(!el)return;
-  let h=`<div class="ftree-root ${!selId?'sel':''}" onclick="selMoveTarget(null)">📁 Root (no folder)</div>`;
-  function add(f,indent){
-    h+=`<div class="ftree-item ${f.id===selId?'sel':''}" onclick="selMoveTarget('${f.id}')" style="padding-left:${indent*18+10}px;">${IC.folderOpen} ${f.name}</div>`;
-    folders.filter(x=>x.parentId===f.id).forEach(x=>add(x,indent+1));
+
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => e.preventDefault());
+
+document.addEventListener('drop', async e => {
+  e.preventDefault();
+  const target = e.target.closest('.folder-card, .tree-item');
+  if (target && draggedItem) {
+    const folderId = target.dataset.folderId || target.closest('[data-folder-id]')?.dataset.folderId;
+    if (folderId) {
+      await moveItem(draggedItem, folderId);
+    }
   }
-  folders.filter(f=>!f.parentId).forEach(f=>add(f,0));
-  el.innerHTML=h;
-}
-function selMoveTarget(id){selMoveFolder=id;renderFolderTree(document.getElementById('folderTree'),id);}
+  draggedItem = null;
+});
 
-function openFolderModal(){
-  populateSelects();
-  document.getElementById('folderName').value='';
-  document.getElementById('folderDesc').value='';
-  document.getElementById('parentFolder').value=currentFolderId||'';
+// ══════════════════════════════════════════════════
+//  CRUD OPERATIONS
+// ══════════════════════════════════════════════════
+async function createFolder() {
+  const name = document.getElementById('folderName').value.trim();
+  if (!name) return showNotif('Folder name required', 'error');
+  
+  showLoading('Creating folder...');
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'createFolder',
+        name,
+        description: document.getElementById('folderDesc').value,
+        parentId: document.getElementById('parentFolder').value || null,
+        createdBy: currentUser
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      await loadFolderTree();
+      closeFolderModal();
+      showNotif('Folder created!', 'success');
+    } else {
+      showNotif(data.error, 'error');
+    }
+  } catch (e) {
+    showNotif('Error creating folder', 'error');
+  }
+  hideLoading();
+}
+
+async function moveItem(itemId, targetFolderId) {
+  showLoading('Moving...');
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'moveItem', itemId, targetFolderId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      await loadItems();
+      showNotif('Item moved!', 'success');
+    }
+  } catch (e) {
+    showNotif('Error moving item', 'error');
+  }
+  hideLoading();
+}
+
+async function deleteItem(itemId) {
+  showLoading('Deleting...');
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'deleteItem', itemId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      await loadItems();
+      closeDeleteModal();
+      showNotif('Item deleted!', 'success');
+    }
+  } catch (e) {
+    showNotif('Error deleting item', 'error');
+  }
+  hideLoading();
+}
+
+// ══════════════════════════════════════════════════
+//  MODAL FUNCTIONS
+// ══════════════════════════════════════════════════
+function openFolderModal() {
+  populateFolderSelects();
   document.getElementById('folderModal').classList.add('active');
-  setTimeout(()=>document.getElementById('folderName').focus(),100);
-}
-function closeFolderModal(){document.getElementById('folderModal').classList.remove('active');}
-function createFolder(){
-  const name=document.getElementById('folderName').value.trim();
-  if(!name){showNotif('Please enter a folder name','error');return;}
-  const f={id:'folder-'+Date.now(),name,description:document.getElementById('folderDesc').value.trim(),parentId:document.getElementById('parentFolder').value||null,createdBy:currentUser,createdAt:new Date().toISOString()};
-  folders.push(f);saveFolders();closeFolderModal();populateSelects();loadSection(curSecIdx);renderTabs();
-  showNotif(`Folder "${name}" created!`,'success');
-  gasNotify('folderCreated',{folderName:name,createdBy:currentUser});
-}
-function openDelFolderModal(id){const f=getFolderById(id);if(!f)return;folderToDelete=f;document.getElementById('delFolderName').textContent=f.name;document.getElementById('delFolderModal').classList.add('active');}
-function closeDelFolderModal(){document.getElementById('delFolderModal').classList.remove('active');folderToDelete=null;}
-function confirmDeleteFolder(){
-  if(!folderToDelete)return;
-  sections.forEach(s=>{if(s.items)s.items.filter(i=>i.folderId===folderToDelete.id).forEach(i=>{i.folderId=folderToDelete.parentId;});});
-  folders=folders.filter(f=>f.id!==folderToDelete.id);
-  if(currentFolderId===folderToDelete.id)navToFolder(folderToDelete.parentId);
-  saveFolders();saveToStorage();closeDelFolderModal();populateSelects();loadSection(curSecIdx);
-  showNotif('Folder deleted','success');
-}
-function openMoveModal(i){const item=curItems[i];if(!item)return;itemToMove=item;selMoveFolder=item.folderId||null;document.getElementById('moveItemInfo').innerHTML=`<strong>Moving:</strong> ${item.title}<br><small>${item.sectionName||item.section}</small>`;renderFolderTree(document.getElementById('folderTree'),selMoveFolder);document.getElementById('moveModal').classList.add('active');}
-function closeMoveModal(){document.getElementById('moveModal').classList.remove('active');itemToMove=null;selMoveFolder=null;}
-function confirmMove(){if(!itemToMove)return;sections.forEach(s=>{if(s.items){const i=s.items.find(x=>x.id===itemToMove.id);if(i)i.folderId=selMoveFolder;}});saveToStorage();closeMoveModal();loadSection(curSecIdx);showNotif('Item moved!','success');}
-
-// ══════════════════════════════════════════════════
-//  FILE HANDLING
-// ══════════════════════════════════════════════════
-function onFileSelect(input){
-  const file=input.files?.[0]; if(!file)return;
-  if(!/\.(pdf|xlsx?|docx?|pptx?)$/i.test(file.name)){showNotif('Invalid file type','error');return;}
-  selFile=file;
-  const r=new FileReader();r.onload=e=>{selFileData=e.target.result;};r.readAsDataURL(file);
-  document.getElementById('fileNameDisplay').textContent=file.name;
-  document.getElementById('uploadZone').classList.add('has-file');
-  showNotif('File selected: '+file.name,'success');
-}
-function clearFile(){selFile=null;selFileData=null;document.getElementById('fileInput').value='';document.getElementById('fileNameDisplay').textContent='';document.getElementById('uploadZone').classList.remove('has-file');}
-function showTab(t){
-  const isUp=t==='upload';
-  document.getElementById('tabUploadBtn').style.cssText=isUp?'flex:1;padding:8px;background:var(--primary);color:white;border:2px solid var(--primary);border-radius:6px;cursor:pointer;font-weight:600;':'flex:1;padding:8px;background:white;color:#333;border:2px solid #ccc;border-radius:6px;cursor:pointer;font-weight:600;';
-  document.getElementById('tabLinkBtn').style.cssText=isUp?'flex:1;padding:8px;background:white;color:#333;border:2px solid #ccc;border-radius:6px;cursor:pointer;font-weight:600;':'flex:1;padding:8px;background:var(--primary);color:white;border:2px solid var(--primary);border-radius:6px;cursor:pointer;font-weight:600;';
-  document.getElementById('uploadTab').style.display=isUp?'':'none';
-  document.getElementById('linkTab').style.display=isUp?'none':'';
-  if(!isUp)clearFile();
 }
 
-// ══════════════════════════════════════════════════
-//  RICH TEXT
-// ══════════════════════════════════════════════════
-function fmt(cmd,val=null){document.execCommand(cmd,false,val);document.getElementById('itemDesc').focus();}
-function insLink(){const u=prompt('Enter URL:');if(u)document.execCommand('createLink',false,u);document.getElementById('itemDesc').focus();}
-const getDescHTML=()=>document.getElementById('itemDesc').innerHTML;
-const setDescHTML=h=>{document.getElementById('itemDesc').innerHTML=h||'';};
+function closeFolderModal() {
+  document.getElementById('folderModal').classList.remove('active');
+}
 
-// ══════════════════════════════════════════════════
-//  ADD / EDIT MODAL
-// ══════════════════════════════════════════════════
-function openAddModal(){
-  editingItem=null;
-  document.getElementById('modalTitle').textContent='Add New File';
-  document.getElementById('itemTitle').value='';
-  document.getElementById('itemSection').value=curSecIdx>0?sections[curSecIdx].id:'routine-epi';
-  document.getElementById('itemDate').value=new Date().toISOString().split('T')[0];
-  document.getElementById('itemDue').value='';
-  document.getElementById('itemStatus').value='pending';
-  document.getElementById('itemAssignee').value='';
-  document.getElementById('itemAssigneeEmail').value='';
-  document.getElementById('itemFolder').value=currentFolderId||'';
-  setDescHTML('');clearFile();showTab('upload');
-  document.getElementById('linkUrl').value='';
-  document.getElementById('linkName').value='';
-  document.getElementById('itemFileUrl').value='';
-  document.getElementById('itemFileType').value='';
-  updateFields();populateSelects();
+function openAddModal() {
   document.getElementById('addModal').classList.add('active');
 }
-function openEditModal(i){
-  const item=curItems[i];if(!item)return;
-  if(item.section==='nextstep'&&userRole==='user'){showNotif('Only Supervisors can edit Next Steps','error');return;}
-  editingItem=item;
-  document.getElementById('modalTitle').textContent='Edit Item';
-  document.getElementById('itemTitle').value=item.title||'';
-  document.getElementById('itemSection').value=item.section;
-  document.getElementById('itemDate').value=item.date||'';
-  document.getElementById('itemDue').value=item.dueDate||'';
-  document.getElementById('itemStatus').value=item.status||'pending';
-  document.getElementById('itemAssignee').value=item.assignee||'';
-  document.getElementById('itemAssigneeEmail').value=item.assigneeEmail||'';
-  document.getElementById('itemFolder').value=item.folderId||'';
-  setDescHTML(item.description||'');
-  document.getElementById('itemFileUrl').value=item.fileUrl||'';
-  document.getElementById('itemFileType').value=item.fileType||'';
-  clearFile();
-  const isExt=item.fileUrl&&item.fileUrl.startsWith('http')&&!item.fileUrl.startsWith('data:');
-  if(isExt){showTab('link');document.getElementById('linkUrl').value=item.fileUrl;document.getElementById('linkName').value=item.fileName||'';}
-  else{showTab('upload');if(item.fileName){document.getElementById('fileNameDisplay').textContent=item.fileName+' (existing)';document.getElementById('uploadZone').classList.add('has-file');}}
-  populateSelects();updateFields();
-  document.getElementById('addModal').classList.add('active');
+
+function closeAddModal() {
+  document.getElementById('addModal').classList.remove('active');
 }
-function closeAddModal(){document.getElementById('addModal').classList.remove('active');editingItem=null;selFile=null;selFileData=null;}
-function updateFields(){
-  const sec=document.getElementById('itemSection').value;
-  const isNS=sec==='nextstep';
-  if(isNS&&userRole==='user'){showNotif('Only Supervisors can create Next Steps','error');document.getElementById('itemSection').value='routine-epi';return;}
-  document.getElementById('nsFields').style.display=isNS?'':'none';
-  document.getElementById('dateLbl').textContent=sec==='email'?'Email Date *':sec==='meeting'?'Meeting Date *':isNS?'Created Date *':'Date *';
-}
-function saveItem(){
-  const title=document.getElementById('itemTitle').value.trim();
-  const secId=document.getElementById('itemSection').value;
-  const date=document.getElementById('itemDate').value;
-  if(!title){showNotif('Enter title','error');return;}
-  if(!date){showNotif('Select date','error');return;}
-  if(secId==='nextstep'&&userRole==='user'){showNotif('Only Supervisors can create Next Steps','error');return;}
-  let fileUrl=document.getElementById('itemFileUrl').value.trim();
-  let fileType=document.getElementById('itemFileType').value;
-  let fileName=editingItem?.fileName||null;
-  if(selFile&&selFileData){fileUrl=selFileData;fileName=selFile.name;fileType=detectFT(selFile.name);}
-  else{const eu=document.getElementById('linkUrl').value.trim();if(eu){fileUrl=eu;fileName=document.getElementById('linkName').value.trim()||linkDisplayName(eu);fileType=extLinkType(eu);}}
-  if(fileUrl&&!fileType)fileType=detectFT(fileUrl);
-  showLoading('Saving…');
-  const isNew=!editingItem;
-  const data={id:editingItem?.id||'item-'+Date.now(),title,section:secId,date,
-    dueDate:secId==='nextstep'?document.getElementById('itemDue').value:null,
-    status:secId==='nextstep'?document.getElementById('itemStatus').value:null,
-    assignee:secId==='nextstep'?document.getElementById('itemAssignee').value.trim():null,
-    assigneeEmail:secId==='nextstep'?document.getElementById('itemAssigneeEmail').value.trim():null,
-    description:getDescHTML(),fileUrl:fileUrl||editingItem?.fileUrl||null,fileName,
-    fileType:fileType||editingItem?.fileType||null,folderId:document.getElementById('itemFolder').value||null,
-    comments:editingItem?.comments||[],createdBy:editingItem?.createdBy||currentUser,createdAt:editingItem?.createdAt||new Date().toISOString()};
-  const sec=sections.find(s=>s.id===secId);
-  if(sec?.items){
-    if(editingItem)sections.forEach(s=>{if(s.items){const idx=s.items.findIndex(i=>i.id===editingItem.id);if(idx!==-1)s.items.splice(idx,1);}});
-    sec.items.push(data);
+
+function openMoveModal(itemId) {
+  const item = items.find(i => i.id === itemId);
+  if (item) {
+    document.getElementById('moveItemInfo').innerHTML = `<strong>Moving:</strong> ${item.title}`;
+    renderFolderTree('folderTreeMove');
+    document.getElementById('moveModal').classList.add('active');
+    window.__movingItemId = itemId;
   }
-  saveToStorage();
-  if(isNew)gasNotify(secId==='nextstep'?'taskAssigned':'newItem',{itemTitle:title,section:secId,addedBy:currentUser,description:stripHtml(data.description)});
-  setTimeout(()=>{hideLoading();closeAddModal();renderTabs();loadSection(curSecIdx);showNotif(editingItem?'Updated!':'Added!','success');},500);
+}
+
+function closeMoveModal() {
+  document.getElementById('moveModal').classList.remove('active');
+  window.__movingItemId = null;
+}
+
+function confirmMove() {
+  const targetId = document.querySelector('#folderTreeMove .selected')?.dataset?.folderId;
+  if (targetId && window.__movingItemId) {
+    moveItem(window.__movingItemId, targetId);
+    closeMoveModal();
+  }
+}
+
+function openDeleteModal(itemId) {
+  const item = items.find(i => i.id === itemId);
+  if (item) {
+    document.getElementById('deleteItemTitle').textContent = item.title;
+    document.getElementById('deleteModal').classList.add('active');
+    window.__deletingItemId = itemId;
+  }
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('active');
+  window.__deletingItemId = null;
+}
+
+function confirmDelete() {
+  if (window.__deletingItemId) {
+    deleteItem(window.__deletingItemId);
+  }
 }
 
 // ══════════════════════════════════════════════════
-//  PREVIEW
+//  UTILITIES
 // ══════════════════════════════════════════════════
-function openPreview(i,focusCmt=false){
-  const item=curItems[i];if(!item)return;previewItem=item;
-  document.getElementById('previewTitle').textContent=item.title;
-  document.getElementById('prevOpenBtn').style.display=item.fileUrl?'flex':'none';
-  document.getElementById('prevDlBtn').style.display=item.fileUrl?'flex':'none';
-  let h=`<div style="padding:4px 0;">`;
-  h+=`<h4 style="font-size:1.1rem;color:var(--gray-800);margin-bottom:12px;">${item.title}</h4>`;
-  h+=`<p style="margin-bottom:8px;color:var(--gray-600);font-size:.9rem;"><strong>Date:</strong> ${fmtDate(item.date)}</p>`;
-  if(item.folderId){const f=getFolderById(item.folderId);if(f)h+=`<p style="margin-bottom:8px;color:var(--gray-600);font-size:.9rem;"><strong>Folder:</strong> ${f.name}</p>`;}
-  if(item.section==='nextstep'){
-    h+=`<p style="margin-bottom:8px;"><strong>Status:</strong> <span class="status-badge ${statusClass(item)}">${statusLabel(item)}</span></p>`;
-    if(item.dueDate)h+=`<p style="margin-bottom:8px;color:var(--gray-600);font-size:.9rem;"><strong>Due:</strong> ${fmtDate(item.dueDate)}</p>`;
-    if(item.assignee)h+=`<p style="margin-bottom:8px;color:var(--gray-600);font-size:.9rem;"><strong>Assigned to:</strong> ${item.assignee}${item.assigneeEmail?` (${item.assigneeEmail})`:''}</p>`;
-  }
-  if(item.description)h+=`<p style="margin-bottom:4px;"><strong>Description:</strong></p><div style="background:white;padding:12px;border-radius:6px;border:1px solid var(--gray-200);font-size:.9rem;">${item.description}</div>`;
-  if(item.status==='completed'&&item.completionNotes)h+=`<div style="margin-top:16px;padding:14px;background:#d4edda;border-radius:8px;border-left:4px solid var(--success);"><h5 style="color:#155724;margin-bottom:8px;">${IC.check} Completed by ${item.completedBy||''} on ${fmtDate(item.completionDate)}</h5><div style="background:white;padding:10px;border-radius:6px;font-size:.85rem;">${item.completionNotes}</div>${item.evidenceUrl?`<p style="margin-top:8px;"><a href="${item.evidenceUrl}" target="_blank" style="color:var(--success);">View Evidence</a></p>`:''}</div>`;
-  if(item.fileUrl){
-    const isExt=item.fileUrl.startsWith('http')&&!item.fileUrl.startsWith('data:');
-    h+=`<div style="margin-top:16px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><strong>${isExt?'Linked':'Attached'}: ${item.fileName||'File'}</strong>`;
-    if(isExt)h+=`<button class="btn btn-info" onclick="window.open('${item.fileUrl}','_blank')" style="padding:6px 12px;font-size:.8rem;">Open Link</button>`;
-    else h+=`<button class="btn btn-success" onclick="downloadPreview()" style="padding:6px 12px;font-size:.8rem;">Download</button>`;
-    h+=`</div>`;
-    if(isExt)h+=`<div style="display:flex;flex-direction:column;align-items:center;padding:40px;border:2px dashed var(--gray-300);border-radius:12px;background:#f9f9f9;cursor:pointer;" onclick="window.open('${item.fileUrl}','_blank')"><p style="font-weight:600;color:#333;">Click to open in new tab</p></div>`;
-    else h+=`<iframe src="${item.fileUrl}" style="width:100%;height:400px;border:1px solid var(--gray-200);border-radius:8px;"></iframe>`;
-    h+=`</div>`;
-  }
-  h+=`</div>`;
-  document.getElementById('previewContainer').innerHTML=h;
-  renderComments();
-  document.getElementById('previewModal').classList.add('active');
-  if(focusCmt)setTimeout(()=>document.getElementById('newCmtText')?.focus(),300);
-}
-function closePreviewModal(){document.getElementById('previewModal').classList.remove('active');previewItem=null;replyingTo=null;}
-function openPreviewFile(){if(previewItem?.fileUrl)window.open(previewItem.fileUrl,'_blank');}
-function downloadPreview(){
-  if(!previewItem?.fileUrl)return;
-  if(previewItem.fileUrl.startsWith('data:')){const a=document.createElement('a');a.href=previewItem.fileUrl;a.download=previewItem.fileName||'download';document.body.appendChild(a);a.click();document.body.removeChild(a);}
-  else window.open(previewItem.fileUrl,'_blank');
-  showNotif('Download started!','success');
-}
-function dlFile(i){
-  const item=curItems[i];if(!item?.fileUrl)return;
-  if(item.fileUrl.startsWith('data:')){const a=document.createElement('a');a.href=item.fileUrl;a.download=item.fileName||'download';document.body.appendChild(a);a.click();document.body.removeChild(a);}
-  else window.open(item.fileUrl,'_blank');
-  showNotif('Download started!','success');
-}
-
-// ══════════════════════════════════════════════════
-//  COMMENTS
-// ══════════════════════════════════════════════════
-const EMOJIS=['👍','❤️','😊','🎉','👀','🔥'];
-function renderComments(){
-  if(!previewItem)return;
-  const cmts=previewItem.comments||[];
-  let h=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><h5 style="font-size:.95rem;color:var(--gray-800);display:flex;align-items:center;gap:6px;">${IC.comment} Comments (${cmts.length})</h5></div>`;
-  h+=`<div style="max-height:300px;overflow-y:auto;margin-bottom:12px;">`;
-  cmts.forEach((c,idx)=>{
-    const rx=c.reactions||{};
-    h+=`<div class="comment-item ${c.role||'user'}">
-      <div class="cmt-header"><span class="cmt-author">${c.author} <span class="role-tag ${c.role||'user'}">${c.role||'user'}</span></span><span class="cmt-time">${fmtDT(c.time)}${c.edited?' (edited)':''}</span></div>
-      <div class="cmt-text" id="ct${idx}">${c.text}</div>
-      ${c.attachment?`<div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--gray-100);border-radius:6px;margin-top:6px;font-size:.85rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg><span>${c.attachmentName}</span><a href="${c.attachment}" download="${c.attachmentName}" style="color:var(--primary);font-weight:600;">Download</a></div>`:''}
-      <div class="reactions-row"><div class="react-badges">${EMOJIS.map(e=>{const n=(rx[e]||[]).length,me=(rx[e]||[]).includes(currentUser);return n>0?`<span class="react-badge ${me?'me':''}" onclick="toggleReact(${idx},'${e}')">${e} ${n}</span>`:''}).join('')}</div>
-      <div class="react-picker-wrap"><button class="react-btn" onclick="toggleReactPicker(${idx})">😊</button><div class="react-popup" id="rp${idx}">${EMOJIS.map(e=>`<span class="react-opt" onclick="toggleReact(${idx},'${e}')">${e}</span>`).join('')}</div></div></div>
-      <div><button class="cmt-reply-btn" onclick="startReply(${idx})">${IC.reply} Reply</button>${c.author===currentUser?`<button class="cmt-edit-btn" onclick="startEditCmt(${idx})">✏ Edit</button>`:''}</div>
-      ${(c.replies||[]).length?`<div class="cmt-replies">${(c.replies||[]).map((r,ri)=>`<div class="reply-item"><div class="cmt-header"><span class="cmt-author">${r.author} <span class="role-tag ${r.role||'user'}">${r.role||'user'}</span></span><span class="cmt-time">${fmtDT(r.time)}</span></div><div class="cmt-text">${r.text}</div></div>`).join('')}</div>`:''}
-    </div>`;
+function populateFolderSelects() {
+  const selects = ['parentFolder', 'itemFolder'];
+  selects.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.innerHTML = '<option value="">Root</option>';
+      folders.forEach(f => {
+        el.innerHTML += `<option value="${f.id}">${f.name}</option>`;
+      });
+    }
   });
-  h+=`</div>`;
-  h+=`<div id="replyBox" style="display:none;margin-bottom:12px;padding:12px;background:#e0e7ff;border-radius:8px;">
-    <p style="font-size:.85rem;font-weight:600;color:#3730a3;margin-bottom:8px;">Replying to comment…</p>
-    <div class="cmt-editor" id="replyText" contenteditable="true" placeholder="Write your reply…" style="background:white;"></div>
-    <div style="display:flex;gap:8px;margin-top:8px;">
-      <button class="btn btn-purple" onclick="submitReply()" style="padding:8px 14px;font-size:.8rem;">${IC.send} Send</button>
-      <button class="btn" onclick="cancelReply()" style="padding:8px 14px;font-size:.8rem;color:#333;border:2px solid #ccc;">Cancel</button>
-    </div>
-  </div>`;
-  h+=`<div><div class="mini-bar">
-    <button type="button" onclick="document.execCommand('bold');document.getElementById('newCmtText').focus()"><strong>B</strong></button>
-    <button type="button" onclick="document.execCommand('italic');document.getElementById('newCmtText').focus()"><em>I</em></button>
-  </div>
-  <div class="cmt-add-row">
-    <div class="cmt-editor" id="newCmtText" contenteditable="true" placeholder="Add a comment…"></div>
-    <button class="btn btn-purple" onclick="addComment()" style="padding:10px 16px;">${IC.send}</button>
-  </div></div>`;
-  document.getElementById('commentsSection').innerHTML=h;
-}
-function toggleReactPicker(idx){const p=document.getElementById(`rp${idx}`);document.querySelectorAll('.react-popup').forEach(x=>{if(x.id!==`rp${idx}`)x.classList.remove('show');});p.classList.toggle('show');}
-function toggleReact(idx,e){
-  if(!previewItem?.comments[idx])return;
-  const c=previewItem.comments[idx];if(!c.reactions)c.reactions={};if(!c.reactions[e])c.reactions[e]=[];
-  const i=c.reactions[e].indexOf(currentUser);
-  if(i===-1)c.reactions[e].push(currentUser);else c.reactions[e].splice(i,1);
-  sections.forEach(s=>{if(s.items){const it=s.items.find(x=>x.id===previewItem.id);if(it)it.comments=previewItem.comments;}});
-  saveToStorage();renderComments();
-}
-function addComment(){
-  const el=document.getElementById('newCmtText');const text=el.innerHTML.trim();
-  if(!text||text==='<br>'){showNotif('Please add a comment','error');return;}
-  if(!previewItem)return;
-  if(!previewItem.comments)previewItem.comments=[];
-  previewItem.comments.push({id:'c-'+Date.now(),author:currentUser,role:userRole,text,time:new Date().toISOString(),replies:[],reactions:{}});
-  sections.forEach(s=>{if(s.items){const i=s.items.find(x=>x.id===previewItem.id);if(i)i.comments=previewItem.comments;}});
-  saveToStorage();
-  gasNotify('newComment',{itemTitle:previewItem.title,commenter:currentUser,commentText:stripHtml(text)});
-  el.innerHTML='';renderComments();renderItems();showNotif('Comment added!','success');
-}
-function startReply(idx){replyingTo=idx;document.getElementById('replyBox').style.display='';document.getElementById('replyText').focus();}
-function cancelReply(){replyingTo=null;document.getElementById('replyBox').style.display='none';document.getElementById('replyText').innerHTML='';}
-function submitReply(){
-  const text=document.getElementById('replyText').innerHTML.trim();
-  if(!text||text==='<br>'){showNotif('Please add a reply','error');return;}
-  if(replyingTo===null||!previewItem)return;
-  if(!previewItem.comments[replyingTo].replies)previewItem.comments[replyingTo].replies=[];
-  previewItem.comments[replyingTo].replies.push({author:currentUser,role:userRole,text,time:new Date().toISOString()});
-  sections.forEach(s=>{if(s.items){const i=s.items.find(x=>x.id===previewItem.id);if(i)i.comments=previewItem.comments;}});
-  saveToStorage();cancelReply();renderComments();showNotif('Reply added!','success');
-}
-function startEditCmt(idx){
-  editingCmtIdx=idx;const c=previewItem.comments[idx];
-  const el=document.getElementById(`ct${idx}`);if(!el)return;
-  el.innerHTML=`<div class="cmt-editor" id="editCmtText" contenteditable="true" style="background:white;min-height:50px;border:2px solid var(--info);">${c.text}</div>
-  <div style="display:flex;gap:8px;margin-top:8px;">
-    <button class="btn btn-info" onclick="saveEditCmt()" style="padding:6px 12px;font-size:.75rem;">✔ Save</button>
-    <button class="btn" onclick="renderComments()" style="padding:6px 12px;font-size:.75rem;color:#333;border:2px solid #ccc;">Cancel</button>
-  </div>`;
-}
-function saveEditCmt(){
-  if(editingCmtIdx===null||!previewItem)return;
-  const txt=document.getElementById('editCmtText')?.innerHTML.trim();
-  if(!txt){showNotif('Comment cannot be empty','error');return;}
-  previewItem.comments[editingCmtIdx].text=txt;previewItem.comments[editingCmtIdx].edited=true;
-  sections.forEach(s=>{if(s.items){const i=s.items.find(x=>x.id===previewItem.id);if(i)i.comments=previewItem.comments;}});
-  saveToStorage();editingCmtIdx=null;renderComments();showNotif('Comment updated!','success');
 }
 
-// ══════════════════════════════════════════════════
-//  COMPLETE TASK
-// ══════════════════════════════════════════════════
-function openCompleteModal(i){
-  if(userRole!=='supervisor'&&userRole!=='admin')return;
-  const item=curItems[i];if(!item||item.status==='completed')return;
-  itemToComplete=item;
-  document.getElementById('completeInfo').innerHTML=`<h4 style="font-size:1rem;margin-bottom:6px;">${item.title}</h4><p style="font-size:.85rem;color:var(--gray-600);">${item.dueDate?'Due: '+fmtDate(item.dueDate):'No due date'}${item.assignee?' | '+item.assignee:''}</p>`;
-  document.getElementById('completeNotes').value='';
-  document.getElementById('completeEvidence').value='';
-  document.getElementById('completeDate').value=new Date().toISOString().split('T')[0];
-  document.getElementById('completeModal').classList.add('active');
-}
-function closeCompleteModal(){document.getElementById('completeModal').classList.remove('active');itemToComplete=null;}
-function confirmComplete(){
-  if(!itemToComplete)return;
-  const notes=document.getElementById('completeNotes').value.trim();
-  if(!notes){showNotif('Enter completion notes','error');return;}
-  showLoading('Completing…');
-  sections.forEach(s=>{if(s.items){const it=s.items.find(i=>i.id===itemToComplete.id);if(it){it.status='completed';it.completionNotes=notes;it.completionDate=document.getElementById('completeDate').value;it.completedBy=currentUser;const eu=document.getElementById('completeEvidence').value.trim();if(eu)it.evidenceUrl=eu;}}});
-  saveToStorage();
-  gasNotify('taskCompleted',{taskTitle:itemToComplete.title,completedBy:currentUser,completionNotes:notes,completionDate:document.getElementById('completeDate').value});
-  setTimeout(()=>{hideLoading();closeCompleteModal();renderTabs();loadSection(curSecIdx);showNotif('Task completed!','success');},500);
+function renderFolderTree(containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  let html = '<div class="tree-item" onclick="selectMoveFolder(null)">📁 Root</div>';
+  const renderNode = (node, level) => {
+    html += `<div class="tree-item" onclick="selectMoveFolder('${node.id}')" style="padding-left:${level * 20 + 20}px;">📁 ${node.name}</div>`;
+    node.children?.forEach(child => renderNode(child, level + 1));
+  };
+  folderTree.forEach(node => renderNode(node, 0));
+  el.innerHTML = html;
 }
 
-// ══════════════════════════════════════════════════
-//  DELETE ITEM
-// ══════════════════════════════════════════════════
-function openDeleteModal(i){
-  if(userRole!=='admin')return;
-  const item=curItems[i];if(!item)return;
-  itemToDelete=item;
-  document.getElementById('deleteItemTitle').textContent=item.title;
-  document.getElementById('deleteModal').classList.add('active');
-}
-function closeDeleteModal(){document.getElementById('deleteModal').classList.remove('active');itemToDelete=null;}
-function confirmDelete(){
-  if(!itemToDelete||userRole!=='admin')return;
-  sections.forEach(s=>{if(s.items){const idx=s.items.findIndex(i=>i.id===itemToDelete.id);if(idx!==-1)s.items.splice(idx,1);}});
-  saveToStorage();closeDeleteModal();renderTabs();loadSection(curSecIdx);showNotif('Deleted!','success');
-}
-
-// ══════════════════════════════════════════════════
-//  UTILS
-// ══════════════════════════════════════════════════
-function showLoading(t){document.getElementById('loadingText').textContent=t;document.getElementById('loadingOverlay').classList.add('active');}
-function hideLoading(){document.getElementById('loadingOverlay').classList.remove('active');}
-function showNotif(msg,type='info'){const n=document.getElementById('notif');n.textContent=msg;n.className=`notif ${type} show`;setTimeout(()=>n.classList.remove('show'),3000);}
-
-// ══════════════════════════════════════════════════
-//  DRAG & DROP + CLICK OUTSIDE
-// ══════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded',()=>{
-  const z=document.getElementById('uploadZone');
-  if(z){
-    z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('over');});
-    z.addEventListener('dragleave',()=>z.classList.remove('over'));
-    z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('over');const f=e.dataTransfer.files;if(f.length){document.getElementById('fileInput').files=f;onFileSelect({files:[f[0]]});}});
+function selectMoveFolder(id) {
+  document.querySelectorAll('#folderTreeMove .tree-item').forEach(el => el.classList.remove('selected'));
+  if (id) {
+    const target = Array.from(document.querySelectorAll('#folderTreeMove .tree-item')).find(el => el.innerText.includes(flatFolders.find(f => f.id === id)?.name));
+    if (target) target.classList.add('selected');
   }
-  document.addEventListener('click',e=>{if(!e.target.closest('.react-picker-wrap'))document.querySelectorAll('.react-popup').forEach(p=>p.classList.remove('show'));});
+  window.__selectedMoveFolder = id;
+}
+
+function handleSearch(q) {
+  searchQuery = q.toLowerCase().trim();
+  loadItems();
+}
+
+function refreshCurrentFolder() {
+  loadItems();
+  loadFolderTree();
+}
+
+function showNotif(msg, type) {
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.className = `notif ${type} show`;
+  setTimeout(() => n.classList.remove('show'), 3000);
+}
+
+function showLoading(text) {
+  document.getElementById('loadingText').textContent = text;
+  document.getElementById('loadingOverlay').classList.add('active');
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('active');
+}
+
+// ══════════════════════════════════════════════════
+//  SYNC & INIT
+// ══════════════════════════════════════════════════
+async function manualSync() {
+  showLoading('Syncing...');
+  await loadFolderTree();
+  await loadItems();
+  hideLoading();
+  showNotif('Sync complete!', 'success');
+}
+
+function showApp() {
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('appContainer').classList.add('active');
+  document.getElementById('userDisplay').textContent = currentUser;
+  document.getElementById('roleDisplay').textContent = userRole;
+  document.getElementById('userBadge').className = 'user-badge ' + userRole;
+  manualSync();
+}
+
+function logout() {
+  currentUser = null;
+  userRole = 'user';
+  document.getElementById('authScreen').classList.remove('hidden');
+  document.getElementById('appContainer').classList.remove('active');
+}
+
+// ══════════════════════════════════════════════════
+//  EVENT LISTENERS
+// ══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  // Drag & drop on folder cards
+  document.addEventListener('dragenter', e => {
+    const folderCard = e.target.closest('.folder-card');
+    if (folderCard) folderCard.classList.add('drag-over');
+  });
+  
+  document.addEventListener('dragleave', e => {
+    const folderCard = e.target.closest('.folder-card');
+    if (folderCard) folderCard.classList.remove('drag-over');
+  });
 });
 </script>
 </body>
