@@ -835,16 +835,9 @@ function setScriptUrl(){} // no-op — URL is hardcoded
 // Save all items to Google Drive (called after every change)
 async function saveToStorage(){
   try{
-    
     const all=sections.flatMap(s=>s.items||[]);
-    await fetch(getScriptUrl(),{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'sync',data:all})
-    });
-  }catch(e){
-    showNotification('Save failed: '+e.message,'error');
-  }
+    await postToScript({action:'sync',data:all});
+  }catch(e){showNotification('Save failed: '+e.message,'error');}
 }
 
 // Load all items from Google Drive
@@ -869,22 +862,15 @@ async function loadFromGoogleDrive(){
 }
 
 async function manualSync(){
-  if(!getScriptUrl()){showNotification('No Script URL set — go to Config → 🔗 Script URL','error');return;}
   const loaded=await loadFromGoogleDrive();
   if(loaded){renderTabs();loadSection(currentSectionIndex,true);showNotification('Synced from Google Drive!','success');}
-  else showNotification('Sync failed — check Script URL','error');
+  else showNotification('Sync failed — check script deployment','error');
 }
 
 async function syncToGoogleDrive(){await saveToStorage();}
 
 async function sendNotificationToAll(action,data){
-  const url=getScriptUrl();
-  if(!url)return;
-  try{
-    await fetch(url,{method:'POST',mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action,...data})});
-  }catch(e){}
+  try{await postToScript({action,...data});}catch(e){}
 }
 
 // ==================== USER STORE (Google Sheets only) ====================
@@ -892,66 +878,53 @@ const DEFAULT_USERS=[
   {username:'sillahkanuseries@gmail.com',password:'admin2',name:'admin',role:'admin'}
 ];
 
-// Always reads from Sheets — no local fallback
+// Always reads from Sheets via GET (GET works fine cross-origin with GAS)
 async function fetchUsers(){
-  const url=getScriptUrl();
-  if(!url){
-    // No URL yet: allow only the default admin so the app isn't bricked on first setup
-    return DEFAULT_USERS;
-  }
   try{
-    const resp=await fetch(url+'?action=getUsers');
+    const resp=await fetch(getScriptUrl()+'?action=getUsers');
     const result=await resp.json();
-    if(result.success&&Array.isArray(result.users)&&result.users.length>0){
+    if(result.success&&Array.isArray(result.users)&&result.users.length>0)
       return result.users;
-    }
-    // Sheet is empty — let admin still log in to seed it
     return DEFAULT_USERS;
-  }catch(e){
-    // Network error — allow default admin only so admin can fix config
-    return DEFAULT_USERS;
-  }
+  }catch(e){return DEFAULT_USERS;}
 }
 
-// Write full users array to Sheets — always
-async function pushUsers(users){
-  
-  const resp=await fetch(getScriptUrl(),{
+// All writes use no-cors POST (GAS doesn't return CORS headers for POST)
+async function postToScript(payload){
+  await fetch(getScriptUrl(),{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'setUsers',users})
+    mode:'no-cors',
+    headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify(payload)
   });
-  const result=await resp.json();
-  if(!result.success)throw new Error(result.error||'Failed to save users');
 }
 
-// Signup: fetch fresh → check duplicate → push back
+async function pushUsers(users){
+  await postToScript({action:'setUsers',users});
+}
+
+// Signup: fetch fresh → check duplicate → push → re-fetch to confirm
 async function remoteAddUser(newUser){
-  
   const users=await fetchUsers();
   if(users.find(u=>u.username.toLowerCase()===newUser.username.toLowerCase()))
     throw new Error('Email already registered');
   users.push(newUser);
   await pushUsers(users);
+  // Wait briefly then re-fetch to confirm GAS wrote it
+  await new Promise(r=>setTimeout(r,1800));
+  const confirmed=await fetchUsers();
+  if(!confirmed.find(u=>u.username.toLowerCase()===newUser.username.toLowerCase()))
+    throw new Error('Account may not have saved — please try signing in. If login fails, try registering again.');
 }
 
 // Seed admin to empty sheet
 async function seedDefaultUsers(){
-  const url=getScriptUrl();
-  if(!url){showNotification('Set Script URL first in Config','error');return;}
-  showLoading('Seeding admin user to Sheets…');
-  try{
-    const resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'seedUsers',users:DEFAULT_USERS})});
-    const result=await resp.json();
-    hideLoading();
-    if(result.success){
-      renderUsersTable();
-      showNotification('Admin seeded to Google Sheets ✓','success');
-    }else{
-      showNotification('Seed failed: '+(result.error||'unknown'),'error');
-    }
-  }catch(e){hideLoading();showNotification('Error: '+e.message,'error');}
+  showLoading('Seeding admin to Sheets…');
+  await pushUsers(DEFAULT_USERS);
+  await new Promise(r=>setTimeout(r,1500));
+  hideLoading();
+  renderUsersTable();
+  showNotification('Admin seeded to Google Sheets ✓','success');
 }
 
 // Legacy stubs — no-ops, kept so nothing crashes
