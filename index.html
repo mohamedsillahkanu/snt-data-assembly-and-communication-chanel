@@ -672,11 +672,27 @@
       </div>
       <div id="nextstepFields" style="display:none;">
         <div class="form-row">
-          <div class="form-group"><label>Due Date</label><input type="date" id="itemDueDate"></div>
-          <div class="form-group"><label>Status</label><select id="itemStatus"><option value="pending">Pending</option><option value="in-progress">In Progress</option><option value="completed">Completed</option></select></div>
+          <div class="form-group">
+            <label>Due Date</label><input type="date" id="itemDueDate">
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="itemStatus">
+              <option value="pending">Pending</option>
+              <option value="in-progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
         </div>
-        <div class="form-group"><label>Assign To</label><input type="text" id="itemAssignee" placeholder="Person responsible"></div>
-        <div class="form-group"><label>Assignee Email</label><input type="email" id="itemAssigneeEmail" placeholder="email@example.com"></div>
+        <div class="form-group">
+          <label>Assign To</label>
+          <select id="itemAssigneeSelect" onchange="onAssigneeSelect(this.value)" style="width:100%;padding:10px 12px;border:2px solid var(--gray-200);border-radius:6px;font-family:inherit;font-size:.9rem;background:#fff;">
+            <option value="">-- Select person --</option>
+          </select>
+          <p class="form-hint" id="assigneeEmailHint" style="display:none;"></p>
+        </div>
+        <input type="hidden" id="itemAssignee">
+        <input type="hidden" id="itemAssigneeEmail">
       </div>
       <div class="form-group" id="emailRecipientsGroup" style="display:none;">
         <label>Email Notification Recipients</label>
@@ -1354,7 +1370,52 @@ function formatDateTime(d){if(!d)return'';return new Date(d).toLocaleString('en-
 function getStatusClass(item){if(item.section!=='nextstep')return'';if(item.status==='completed')return'completed';if(item.status==='in-progress')return'in-progress';if(item.dueDate&&new Date(item.dueDate)<new Date())return'overdue';return'pending';}
 function getStatusLabel(item){return{completed:'Completed','in-progress':'In Progress',overdue:'Overdue',pending:'Pending'}[getStatusClass(item)]||'Pending';}
 function stripHtml(html){const t=document.createElement('div');t.innerHTML=html;return t.textContent||'';}
-// ===== RICH EDITOR FUNCTIONS =====
+// ===== ASSIGNEE DROPDOWN =====
+async function populateAssigneeDropdown(currentAssignee, currentEmail) {
+  const sel = document.getElementById('itemAssigneeSelect');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">-- Select person --</option>';
+  try {
+    const users = await fetchUsers();
+    users.forEach(u => {
+      const name = u.name || u.username;
+      const email = u.username;
+      const opt = document.createElement('option');
+      opt.value = JSON.stringify({name, email});
+      opt.textContent = `${name} (${email})`;
+      if (currentAssignee && (name === currentAssignee || email === currentEmail)) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    // If editing and value set but not in list, add it
+    if (currentAssignee && !users.find(u => (u.name||u.username) === currentAssignee)) {
+      const opt = document.createElement('option');
+      opt.value = JSON.stringify({name: currentAssignee, email: currentEmail||''});
+      opt.textContent = `${currentAssignee} (${currentEmail||'no email'})`;
+      opt.selected = true;
+      sel.appendChild(opt);
+    }
+  } catch(e) {
+    // Fallback — keep empty dropdown
+  }
+  // Sync hidden fields
+  onAssigneeSelect(sel.value);
+}
+
+function onAssigneeSelect(val) {
+  const hint = document.getElementById('assigneeEmailHint');
+  if (!val) {
+    document.getElementById('itemAssignee').value = '';
+    document.getElementById('itemAssigneeEmail').value = '';
+    if (hint) hint.style.display = 'none';
+    return;
+  }
+  try {
+    const data = JSON.parse(val);
+    document.getElementById('itemAssignee').value = data.name || '';
+    document.getElementById('itemAssigneeEmail').value = data.email || '';
+    if (hint) { hint.textContent = 'Email: ' + (data.email || 'none'); hint.style.display = 'block'; }
+  } catch(e) {}
+}
 function fmt(cmd,val){document.execCommand(cmd,false,val||null);document.getElementById('itemDescription')?.focus();}
 function formatText(cmd){fmt(cmd);}// backward compat
 function formatBlock(tag){if(tag)document.execCommand('formatBlock',false,tag);document.getElementById('itemDescription')?.focus();}
@@ -1535,8 +1596,11 @@ function openEditModalForItem(item){
   editingItem=item;document.getElementById('modalTitle').textContent='Edit Item';
   document.getElementById('itemTitle').value=item.title||'';document.getElementById('itemMainSection').value=item.section;
   document.getElementById('itemDate').value=item.date||'';document.getElementById('itemDueDate').value=item.dueDate||'';
-  document.getElementById('itemStatus').value=item.status||'pending';document.getElementById('itemAssignee').value=item.assignee||'';
-  document.getElementById('itemAssigneeEmail').value=item.assigneeEmail||'';document.getElementById('itemDescription').innerHTML=item.description||'';
+  document.getElementById('itemStatus').value=item.status||'pending';
+  document.getElementById('itemAssignee').value=item.assignee||'';
+  document.getElementById('itemAssigneeEmail').value=item.assigneeEmail||'';
+  document.getElementById('itemDescription').innerHTML=item.description||'';
+  if(item.section==='nextstep') populateAssigneeDropdown(item.assignee||'', item.assigneeEmail||'');
   document.getElementById('itemFileUrl').value=item.fileUrl||'';document.getElementById('itemFileType').value=item.fileType||'';
   clearFileSelection();onSectionChange();
   if(!isFlat(item.section)&&item.subsection&&item.subfolderType){
@@ -1559,6 +1623,7 @@ function onSectionChange(){
   if(!showSub){document.getElementById('folderSelectionArea').style.display='none';document.getElementById('uploadArea').style.display='block';}
   else{document.getElementById('folderSelectionArea').style.display='block';document.getElementById('uploadArea').style.display='none';if(!editingItem)resetFolderSelection();renderFolderCards();}
   document.getElementById('nextstepFields').style.display=isNS?'block':'none';
+  if(isNS) populateAssigneeDropdown('','');
   document.getElementById('emailRecipientsGroup').style.display=isEmail?'block':'none';
   document.getElementById('dateLabel').textContent=isEmail?'Email Date *':isNS?'Created Date *':sectionId==='meeting'?'Meeting Date *':'Date *';
 }
