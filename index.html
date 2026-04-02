@@ -1061,27 +1061,18 @@ async function handleSignUp(e){
   if(password.length<6){showErr('Password must be at least 6 characters.');return;}
   if(password!==confirm){showErr('Passwords do not match.');return;}
   const btn=e.target.querySelector('button[type=submit]');
-  btn.disabled=true;btn.textContent='Creating…';
+  btn.disabled=true;btn.textContent='Checking…';
   try{
-    const users=await fetchUsers();
-    if(users.find(u=>u.username.toLowerCase()===username))throw new Error('Email already registered.');
-    users.push({username,name,password,role:'user'});
-    await postToScript({action:'setUsers',users});
-    // Poll until confirmed in Sheets (max 10 × 1.5s)
-    btn.textContent='Verifying…';
-    let verified=false;
-    for(let i=0;i<10;i++){
-      await new Promise(r=>setTimeout(r,1500));
-      const check=await fetchUsers();
-      if(check.find(u=>u.username.toLowerCase()===username)){verified=true;break;}
-    }
-    if(!verified){showErr('Account saved but sync is slow. Try signing in after a moment.');}
-    else{
-      ['suName','suUsername','suPassword','suConfirm'].forEach(id=>document.getElementById(id).value='');
-      okEl.style.display='block';okEl.classList.add('show');
-      setTimeout(()=>{okEl.classList.remove('show');okEl.style.display='none';switchAuthTab('signin');},2500);
-    }
-  }catch(err){showErr(err.message||'Sign up failed. Try again.');}
+    // GET check — readable, fast, no column corruption
+    const resp=await fetch(getScriptUrl()+'?action=checkEmail&email='+encodeURIComponent(username));
+    const check=await resp.json();
+    if(check.exists){showErr('That email is already registered.');btn.disabled=false;btn.textContent='Create Account';return;}
+    // Fire-and-forget append — only adds one row, never touches existing users
+    postToScript({action:'appendUser',user:{username,password,name,role:'user'}});
+    ['suName','suUsername','suPassword','suConfirm'].forEach(id=>document.getElementById(id).value='');
+    okEl.style.display='block';okEl.classList.add('show');
+    setTimeout(()=>{okEl.classList.remove('show');okEl.style.display='none';switchAuthTab('signin');},1800);
+  }catch(err){showErr('Sign up failed: '+err.message);}
   btn.disabled=false;btn.textContent='Create Account';
 }
 
