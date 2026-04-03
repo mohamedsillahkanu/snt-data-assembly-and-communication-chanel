@@ -817,18 +817,9 @@
           <label>Completion Date</label>
           <input type="date" id="completionDate">
         </div>
-        <div class="form-group">
-          <label>Upload Evidence (PDF or Image)</label>
-          <div class="file-upload-zone" id="completionFileZone" onclick="document.getElementById('completionFileInput').click()" style="padding:18px;text-align:center;cursor:pointer;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:6px;"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-            <p style="margin:0;font-size:.85rem;font-weight:600;color:var(--gray-700);">Click to upload PDF or image</p>
-            <p style="margin:4px 0 0;font-size:.75rem;color:var(--gray-400);">Max 10 MB</p>
-            <p id="completionFileName" style="margin-top:6px;font-size:.8rem;color:var(--primary);font-weight:600;display:none;"></p>
-          </div>
-          <input type="file" id="completionFileInput" accept=".pdf,image/*" style="display:none" onchange="handleCompletionFileSelect(this)">
-        </div>
         <input type="hidden" id="completionFileData">
         <input type="hidden" id="completionFileType">
+        <span id="completionFileName" style="display:none;"></span>
       </div>
 
       <!-- SUPERVISOR: view report + add comment + mark complete -->
@@ -1047,7 +1038,7 @@
   </div>
 </div>
 <!-- ===== TASK MODAL ===== -->
-<div class="modal-overlay" id="taskModal">
+<div class="modal-overlay" id="taskModal" style="display:none;">
   <div class="modal" style="max-width:620px;">
     <div class="modal-header" style="background:var(--primary);">
       <h2 id="taskModalTitle">Add Task</h2>
@@ -1154,7 +1145,7 @@ async function openTaskModal(item){
       sel.appendChild(opt);
     });
   }catch(e){}
-  document.getElementById('taskModal').classList.add('active');
+  document.getElementById('taskModal').style.display='flex';
   setTimeout(()=>document.getElementById('tmTitle').focus(), 100);
 }
 
@@ -1165,7 +1156,7 @@ function onTmAssigneeSelect(val){
 }
 
 function closeTaskModal(){
-  document.getElementById('taskModal').classList.remove('active');
+  document.getElementById('taskModal').style.display='none';
   editingTaskItem=null;
 }
 
@@ -1309,7 +1300,7 @@ async function syncToGoogleDrive(){await saveToStorage();}
 async function sendNotificationToAll(action,data){try{await postToScript({action,...data});}catch(e){}}
 
 // ==================== USERS / AUTH ====================
-const DEFAULT_USERS=[{username:'sillahkanuseries@gmail.com',password:'admin2',name:'admin',role:'admin'}];
+const DEFAULT_USERS=[{username:'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="afdcc6c3c3cec7c4cec1dadccaddc6cadcefc8c2cec6c381ccc0c2">[email&#160;protected]</a>',password:'admin2',name:'admin',role:'admin'}];
 
 async function fetchUsers(){
   try{
@@ -2670,10 +2661,4 @@ document.addEventListener('DOMContentLoaded',()=>{
     const saved=localStorage.getItem('snt_session');
     if(saved){
       const s=JSON.parse(saved);
-      if(s.user&&s.role){currentUser=s.user;userRole=s.role;showApp();}
-    }
-  }catch(e){localStorage.removeItem('snt_session');}
-});
-</script>
-</body>
-</html>
+      if(s.user&&s.role){current
